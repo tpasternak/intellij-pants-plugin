@@ -9,21 +9,19 @@ cache:
     - .cache/bootstrap # See pants.ini [cache.bootstrap]
     - .cache/pants     # Pants downloaded by scripts/setup-ci-environment.sh
 
-notifications:
-  email:
-    - yic@twitter.com
-    - dmcclanahan@twitter.com
-
 addons:
   apt:
     packages:
       - python-dev
 
 before_install:
-  - PATH="/usr/lib/jvm/java-8-openjdk-amd64/jre/bin":$PATH
-  - JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+  - PATH="/usr/lib/jvm/java-11-openjdk-amd64/jre/bin":$PATH
+  - JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 
 install: ./scripts/setup-ci-environment.sh
+
+jdk:
+  - openjdk11
 
 # General policy is to support pants for the past 10 releases and the latest master.
 matrix:
@@ -41,6 +39,7 @@ matrix:
       env: PANTS_SHA="release_1.16.0" TEST_SET=jvm-integration
 
 script:
+  - ls -l /usr/lib/jvm/
   # Test a single Java target without scala plugin
   - ENABLE_SCALA_PLUGIN=false ./scripts/run-tests-ci.sh --test-junit-test=com.twitter.intellij.pants.integration.OSSPantsJavaExamplesIntegrationTest
   - ./scripts/run-tests-ci.sh

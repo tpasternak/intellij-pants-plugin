@@ -12,7 +12,6 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.roots.LanguageLevelProjectExtension;
 import com.intellij.openapi.roots.ProjectRootManager;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.java.LanguageLevel;
@@ -70,10 +69,9 @@ abstract public class OSSPantsIntegrationTest extends PantsIntegrationTestCase {
     );
 
     LanguageLevel projectLanguageLevel = LanguageLevelProjectExtension.getInstance(myProject).getLanguageLevel();
-    LanguageLevel expectedLanguageLevel = LanguageLevel.JDK_1_8;
-    assertTrue(
-      String.format("Project Language Level should be %s, but is %s", expectedLanguageLevel, projectLanguageLevel),
-      projectLanguageLevel.equals(LanguageLevel.JDK_1_8)
+    LanguageLevel expectedLanguageLevel = LanguageLevel.JDK_11;
+    assertEquals(String.format("Project Language Level should be %s, but is %s", expectedLanguageLevel, projectLanguageLevel),
+                 expectedLanguageLevel, projectLanguageLevel
     );
   }
 

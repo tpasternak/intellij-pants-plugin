@@ -13,3 +13,4 @@ args="${TASKS:-test} tests:${TEST_SET:-:} $(append_intellij_jvm_options test-jun
 
 echo "Running ./pants $args"
 ./pants $args
+
