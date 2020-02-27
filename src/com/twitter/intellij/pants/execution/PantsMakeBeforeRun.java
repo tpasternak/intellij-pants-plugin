@@ -237,15 +237,20 @@ public class PantsMakeBeforeRun extends ExternalSystemBeforeRunTaskProvider {
     }
 
     PantsSettings settings = PantsSettings.getInstance(currentProject);
-    if (settings.isUseIdeaProjectJdk()) {
-      try {
-        commandLine.addParameter(PantsUtil.getJvmDistributionPathParameter(PantsUtil.getJdkPathFromIntelliJCore()));
-      }
-      catch (Exception e) {
-        showPantsMakeTaskMessage(e.getMessage(), ConsoleViewContentType.ERROR_OUTPUT, currentProject);
-        return PantsExecuteTaskResult.emptyFailure();
-      }
+    try {
+      commandLine.addParameter(PantsUtil.getJvmDistributionPathParameter("/usr/lib/jvm/java-1.8.0-openjdk"));
+    }catch (Exception e) {
+
     }
+    //if (settings.isUseIdeaProjectJdk()) {
+    //  try {
+    //    commandLine.addParameter(PantsUtil.getJvmDistributionPathParameter(PantsUtil.getJdkPathFromIntelliJCore()));
+    //  }
+    //  catch (Exception e) {
+    //    showPantsMakeTaskMessage(e.getMessage(), ConsoleViewContentType.ERROR_OUTPUT, currentProject);
+    //    return PantsExecuteTaskResult.emptyFailure();
+    //  }
+    //}
 
     /* Add `.ic.iterate.rc` file */
     final Optional<String> rcIterate = IJRC.getIteratePantsRc(commandLine.getWorkDirectory().getPath());
