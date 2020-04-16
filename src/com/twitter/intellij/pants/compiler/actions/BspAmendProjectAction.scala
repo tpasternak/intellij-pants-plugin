@@ -22,7 +22,7 @@ import org.jetbrains.bsp.{BSP, Icons}
 import scala.collection.JavaConverters._
 import scala.util.Try
 
-
+import FastpassUtils._
 
 class BspAmendProjectAction extends AnAction{
   class Error(msg: String) extends RuntimeException
@@ -35,7 +35,14 @@ class BspAmendProjectAction extends AnAction{
   }
 
   override def actionPerformed(event: AnActionEvent): Unit = Try {
+
     val project = Option(event.getProject)
+
+    val targets = selectedTargets(project.get.getBasePath)
+
+    val dial = new FastpassManager(project.get, pantsRoots(project.get).head, targets)
+    dial.show()
+
     val systemSettings = ExternalSystemApiUtil.getSettings(project.get, BSP.ProjectSystemId)
     systemSettings.getLinkedProjectsSettings.asScala
 
@@ -46,7 +53,6 @@ class BspAmendProjectAction extends AnAction{
       )
     val file = fileChooser.choose(null).head
 
-
     val selectedFoldersPantsExecutable = PantsUtil.findPantsExecutable(file.getPath).toOption
     if(pantsRoots(project.get).exists(f => selectedFoldersPantsExecutable.contains(f))) {
       val list = availableTargets(file)
@@ -55,8 +61,14 @@ class BspAmendProjectAction extends AnAction{
       ExternalProjectUtil.refresh(project.get, BSP.ProjectSystemId) // todo no get here!
     }
   }.getOrElse(())
+}
 
-  private def pantsRoots(project: Project): Seq[VirtualFile] = {
+object FastpassUtils {
+  implicit class OptionalExtension[T](optional: Optional[T]) {
+    def toOption: Option[T] = Option(optional.orElseGet(null))
+  }
+
+  def pantsRoots(project: Project): Seq[VirtualFile] = {
     ModuleManager.getInstance(project).getModules.toList.flatMap {
       module =>
         ModuleRootManager.getInstance(module).getSourceRoots.flatMap {
@@ -65,7 +77,7 @@ class BspAmendProjectAction extends AnAction{
     }
   }
 
-  private def runAmend(basePath: String, chosen: String): Int = {
+  def runAmend(basePath: String, chosen: String): Int = {
     val builder = new ProcessBuilder("fastpass-amend", s"${basePath}/.bsp/bloop.json", chosen)// todo 1. tutaj ma być bardziej getlinkedproject 2. musi się wywalić jeżeli projekt pantsowy nie jest w BSP
     val process = builder.start()
     process.onExit().get() // todo handle cmd line output
@@ -73,7 +85,7 @@ class BspAmendProjectAction extends AnAction{
     exitCode
   }
 
-  private def availableTargets(file: VirtualFile) = {
+  def availableTargets(file: VirtualFile) = {
     val pantsExecutable = PantsUtil.findPantsExecutable(file.getPath).get
     val pantsExecutablePath = Paths.get(pantsExecutable.getParent.getPath)
     val targetPath = Paths.get(file.getPath)
@@ -82,6 +94,15 @@ class BspAmendProjectAction extends AnAction{
       .toString)
     val processList = builderList.start().onExit().get()
     val list = IOUtils.toString(processList.getInputStream, StandardCharsets.UTF_8).split("\n")
+    list
+  }
+
+  def selectedTargets(basePath: String): Array[String] = {
+    val builder = new ProcessBuilder("fastpass-get", s"${basePath}/.bsp/bloop.json")
+    val process = builder.start()
+    process.onExit().get() // todo handle cmd line output
+    val exitCode = process.exitValue()
+    val list = IOUtils.toString(process.getInputStream, StandardCharsets.UTF_8).split("\n")
     list
   }
 }
