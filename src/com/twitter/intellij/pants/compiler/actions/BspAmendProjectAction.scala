@@ -102,7 +102,9 @@ object FastpassUtils {
     val process = builder.start()
     process.onExit().get() // todo handle cmd line output
     val exitCode = process.exitValue()
-    val list = IOUtils.toString(process.getInputStream, StandardCharsets.UTF_8).split("\n")
+    val list = IOUtils
+      .toString(process.getInputStream, StandardCharsets.UTF_8)
+      .split("\n")
     list
   }
 }

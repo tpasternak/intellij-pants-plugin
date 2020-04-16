@@ -12,9 +12,9 @@ import com.intellij.openapi.fileChooser.ex.FileSystemTreeImpl
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.ui.{CheckBoxList, ScrollPaneFactory}
+import com.intellij.ui.{CheckBoxList, CheckBoxListListener, ScrollPaneFactory}
 import com.intellij.util.ui.JBUI
-import javax.swing.event.TreeSelectionEvent
+import javax.swing.event.{ListSelectionEvent, ListSelectionListener, TreeSelectionEvent}
 import javax.swing.{JComponent, JPanel, SwingConstants}
 
 import scala.collection.JavaConverters._
@@ -27,7 +27,7 @@ class FastpassManager(project: Project, dir: VirtualFile, selectedItems: Seq[Str
   init()
 
   var checkboxPanel: CheckBoxList[String] = _
-  var mySelectedItems = selectedItems
+  var mySelectedItems = selectedItems.toSet
 
   override def createCenterPanel(): JComponent = {
     val panel = new JPanel()
@@ -45,9 +45,19 @@ class FastpassManager(project: Project, dir: VirtualFile, selectedItems: Seq[Str
     panel.setPreferredSize(JBUI.size(400))
     checkboxPanel = new CheckBoxList[String]()
     checkboxPanel.addItem("Nothing", "Nothing", true)
+    checkboxPanel.setCheckBoxListListener(
+      (index: Int, value: Boolean) => {
+        val item = checkboxPanel.getItemAt(index)
+        if(value)
+          mySelectedItems = mySelectedItems + item
+        else
+          mySelectedItems = mySelectedItems - item
+      }
+    )
+
     panel.add(checkboxPanel, BorderLayout.CENTER)
 
-    myFileSystemTree.getTree.getSelectionModel().addTreeSelectionListener(
+    myFileSystemTree.getTree.getSelectionModel.addTreeSelectionListener(
       (e: TreeSelectionEvent) => {
         val f = myFileSystemTree.getSelectedFile
 
