@@ -6,32 +6,52 @@ package com.twitter.intellij.pants.compiler.actions
 import java.awt.BorderLayout
 
 import com.intellij.CommonBundle
-import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
+import com.intellij.history.core.Paths
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.fileChooser.ex.FileSystemTreeImpl
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.ui.{CheckBoxList, CheckBoxListListener, ScrollPaneFactory}
+import com.intellij.ui.{CheckBoxList, ScrollPaneFactory}
 import com.intellij.util.ui.JBUI
-import javax.swing.event.{ListSelectionEvent, ListSelectionListener, TreeSelectionEvent}
 import javax.swing.{JComponent, JPanel, SwingConstants}
 
 import scala.collection.JavaConverters._
 import scala.util.Try
 
-class FastpassManager(project: Project, dir: VirtualFile, selectedItems: Seq[String]) extends DialogWrapper(project, false){
+class FastpassManager(project: Project,
+                      dir: VirtualFile,
+                      initiallySelectedItems: Set[String],
+                      importedPantsRoots: Set[VirtualFile]
+                     ) extends DialogWrapper(project, false) {
   setTitle("Fastpass manager")
   setButtonsAlignment(SwingConstants.CENTER)
   setOKButtonText(CommonBundle.getOkButtonText)
   init()
 
   var checkboxPanel: CheckBoxList[String] = _
-  var mySelectedItems = selectedItems.toSet
+  var mySelectedItems: Set[String] = initiallySelectedItems
+
+  def selectedItems: Set[String] = mySelectedItems
 
   override def createCenterPanel(): JComponent = {
+    setupCheckboxPanel
     val panel = new JPanel()
+    panel.setPreferredSize(JBUI.size(800))
 
+    val myFileSystemTree = setupFileTree
+    val scrollPaneFileTree = ScrollPaneFactory.createScrollPane(myFileSystemTree.getTree);
+    scrollPaneFileTree.setPreferredSize(JBUI.size(800, 300))
+    panel.add(scrollPaneFileTree, BorderLayout.CENTER);
+
+    val scrollPaneCheckbox = ScrollPaneFactory.createScrollPane(checkboxPanel)
+    scrollPaneFileTree.setSize(JBUI.size(800, 300))
+    scrollPaneFileTree.setPreferredSize(JBUI.size(800, 300))
+    panel.add(scrollPaneCheckbox, BorderLayout.CENTER)
+    panel
+  }
+
+  private def setupFileTree: FileSystemTreeImpl = {
     val descriptor = new FileChooserDescriptor(true, false,
                                                false, false,
                                                false, false)
@@ -40,36 +60,40 @@ class FastpassManager(project: Project, dir: VirtualFile, selectedItems: Seq[Str
     myFileSystemTree.select(dir, new Runnable {
       override def run(): Unit = ()
     })
-    val scrollPane = ScrollPaneFactory.createScrollPane(myFileSystemTree.getTree());
-    panel.add(scrollPane, BorderLayout.CENTER);
-    panel.setPreferredSize(JBUI.size(400))
+    myFileSystemTree.getTree.getSelectionModel.addTreeSelectionListener(_ => UpdateCombo(myFileSystemTree))
+    myFileSystemTree
+  }
+
+  private def setupCheckboxPanel() = {
     checkboxPanel = new CheckBoxList[String]()
-    checkboxPanel.addItem("Nothing", "Nothing", true)
     checkboxPanel.setCheckBoxListListener(
       (index: Int, value: Boolean) => {
         val item = checkboxPanel.getItemAt(index)
-        if(value)
+        if (value) {
           mySelectedItems = mySelectedItems + item
-        else
+        }
+        else {
           mySelectedItems = mySelectedItems - item
+        }
       }
-    )
+      )
+  }
 
-    panel.add(checkboxPanel, BorderLayout.CENTER)
-
-    myFileSystemTree.getTree.getSelectionModel.addTreeSelectionListener(
-      (e: TreeSelectionEvent) => {
-        val f = myFileSystemTree.getSelectedFile
-
-        val checkboxPanelItems = Try{FastpassUtils.availableTargets(f).toList}.getOrElse(List())
-        checkboxPanel.clear()
-        checkboxPanelItems.foreach(item => {
-          checkboxPanel.addItem(item, item, mySelectedItems.contains(item))
-        })
-      }
-    )
-
-
-    panel
+  private def UpdateCombo(myFileSystemTree: FileSystemTreeImpl) = {
+    val selectedFile = myFileSystemTree.getSelectedFile
+    if (selectedFile != null &&
+       importedPantsRoots.exists(root => Paths.isParent(root.getPath, selectedFile.getPath)
+                                         && root.getPath != selectedFile.getPath)
+    ) {
+      val checkboxPanelItems = Try {
+        FastpassUtils.availableTargets(selectedFile).toList
+      }.getOrElse(List())
+      checkboxPanel.clear()
+      checkboxPanelItems.foreach(item => {
+        checkboxPanel.addItem(item, item, mySelectedItems.contains(item))
+      })
+    } else {
+      checkboxPanel.clear()
+    }
   }
 }

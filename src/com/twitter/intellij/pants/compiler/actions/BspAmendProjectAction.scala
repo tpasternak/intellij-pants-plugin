@@ -35,30 +35,14 @@ class BspAmendProjectAction extends AnAction{
   }
 
   override def actionPerformed(event: AnActionEvent): Unit = Try {
-
     val project = Option(event.getProject)
-
-    val targets = selectedTargets(project.get.getBasePath)
-
-    val dial = new FastpassManager(project.get, pantsRoots(project.get).head, targets)
+    val targets = selectedTargets(project.get.getBasePath).toSet
+    val importedPantsRoots =  pantsRoots(project.get)
+    val dial = new FastpassManager(project.get, pantsRoots(project.get).head, targets, importedPantsRoots)
     dial.show()
-
-    val systemSettings = ExternalSystemApiUtil.getSettings(project.get, BSP.ProjectSystemId)
-    systemSettings.getLinkedProjectsSettings.asScala
-
-    val fileChooser = FileChooserFactory.getInstance().createFileChooser(
-      new FileChooserDescriptor(true, true,true, true,true, true)
-      , project.get
-    , null
-      )
-    val file = fileChooser.choose(null).head
-
-    val selectedFoldersPantsExecutable = PantsUtil.findPantsExecutable(file.getPath).toOption
-    if(pantsRoots(project.get).exists(f => selectedFoldersPantsExecutable.contains(f))) {
-      val list = availableTargets(file)
-      val chosen =  Messages.showEditableChooseDialog("Msg", "Title", Icons.BSP_TARGET, list, list.head, null)
-      runAmend(event.getProject.getBasePath, chosen)
-      ExternalProjectUtil.refresh(project.get, BSP.ProjectSystemId) // todo no get here!
+    if(dial.isOK && dial.selectedItems != targets) {
+      dial.selectedItems.foreach(item => runAmend(event.getProject.getBasePath, item))
+      ExternalProjectUtil.refresh(project.get, BSP.ProjectSystemId)
     }
   }.getOrElse(())
 }
@@ -68,13 +52,13 @@ object FastpassUtils {
     def toOption: Option[T] = Option(optional.orElseGet(null))
   }
 
-  def pantsRoots(project: Project): Seq[VirtualFile] = {
+  def pantsRoots(project: Project): Set[VirtualFile] = {
     ModuleManager.getInstance(project).getModules.toList.flatMap {
       module =>
         ModuleRootManager.getInstance(module).getSourceRoots.flatMap {
-          sourceRoot => PantsUtil.findPantsExecutable(sourceRoot.getPath).toOption
+          sourceRoot => PantsUtil.findPantsExecutable(sourceRoot.getPath).toOption.map(_.getParent)
         }
-    }
+    }.toSet
   }
 
   def runAmend(basePath: String, chosen: String): Int = {
