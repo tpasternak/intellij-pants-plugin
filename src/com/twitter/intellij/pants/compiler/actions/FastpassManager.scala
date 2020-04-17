@@ -100,6 +100,7 @@ class FastpassManager(project: Project,
   var cache = new TargetListCache()
 
   private def updateCheckboxList(selectedFile: VirtualFile) = {
+    fillCheckboxList(List("Waiting"))
     cache.get(selectedFile).thenApply[Unit](targets =>
                                               SwingUtilities.invokeLater { () => {
                                                 if (myFileSystemTree.getSelectedFile == selectedFile) {
@@ -118,13 +119,17 @@ class FastpassManager(project: Project,
 
 import scala.collection.concurrent
 
-class TargetListCache(var cache: concurrent.Map[VirtualFile, List[String]] = new ConcurrentHashMap[VirtualFile, List[String]]().asScala) {
+class TargetListCache {
+  var cache: concurrent.Map[VirtualFile, CompletableFuture[List[String]]]
+  = new ConcurrentHashMap[VirtualFile, CompletableFuture[List[String]]]().asScala
   def get(file: VirtualFile): CompletableFuture[List[String]] = {
-    val result = cache.get(file) match {
-      case Some(targets) => CompletableFuture.completedFuture(targets)
-      case None => FastpassUtils.availableTargetsIn(file)
+    cache.get(file) match {
+      case Some(targets) => targets
+      case None => {
+        val newFut=FastpassUtils.availableTargetsIn(file)
+        cache.put(file, newFut)
+        newFut
+      }
     }
-    result.whenComplete((value, error) => if (error == null) cache.put(file, value))
-    result
   }
 }
