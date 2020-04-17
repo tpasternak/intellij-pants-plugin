@@ -3,7 +3,7 @@
 
 package com.twitter.intellij.pants.compiler.actions
 
-import java.awt.BorderLayout
+import java.awt.{BorderLayout, Dimension, FlowLayout}
 
 import com.intellij.CommonBundle
 import com.intellij.history.core.Paths
@@ -14,7 +14,7 @@ import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.{CheckBoxList, ScrollPaneFactory}
 import com.intellij.util.ui.JBUI
-import javax.swing.{JComponent, JPanel, SwingConstants}
+import javax.swing.{BoxLayout, JComponent, JPanel, SwingConstants}
 
 import scala.collection.JavaConverters._
 import scala.util.Try
@@ -25,7 +25,7 @@ class FastpassManager(project: Project,
                       importedPantsRoots: Set[VirtualFile]
                      ) extends DialogWrapper(project, false) {
   setTitle("Fastpass manager")
-  setButtonsAlignment(SwingConstants.CENTER)
+  //setButtonsAlignment(SwingConstants.CENTER)
   setOKButtonText(CommonBundle.getOkButtonText)
   init()
 
@@ -37,17 +37,16 @@ class FastpassManager(project: Project,
   override def createCenterPanel(): JComponent = {
     setupCheckboxPanel
     val panel = new JPanel()
-    panel.setPreferredSize(JBUI.size(800))
+    panel.setLayout(new BoxLayout(panel,BoxLayout.X_AXIS))
+//    panel.setPreferredSize(JBUI.size(500,500))
 
     val myFileSystemTree = setupFileTree
     val scrollPaneFileTree = ScrollPaneFactory.createScrollPane(myFileSystemTree.getTree);
-    scrollPaneFileTree.setPreferredSize(JBUI.size(800, 300))
-    panel.add(scrollPaneFileTree, BorderLayout.CENTER);
+    scrollPaneFileTree.setPreferredSize(JBUI.size(300,500))
+    panel.add(scrollPaneFileTree);
 
     val scrollPaneCheckbox = ScrollPaneFactory.createScrollPane(checkboxPanel)
-    scrollPaneFileTree.setSize(JBUI.size(800, 300))
-    scrollPaneFileTree.setPreferredSize(JBUI.size(800, 300))
-    panel.add(scrollPaneCheckbox, BorderLayout.CENTER)
+    panel.add(scrollPaneCheckbox)
     panel
   }
 
@@ -57,15 +56,15 @@ class FastpassManager(project: Project,
                                                false, false)
     val internalTree = new com.intellij.ui.treeStructure.Tree()
     val myFileSystemTree = new FileSystemTreeImpl(project, descriptor, internalTree, null, null, null)
-    myFileSystemTree.select(dir, new Runnable {
-      override def run(): Unit = ()
-    })
+    myFileSystemTree.select(dir, null) // todo hiddens?
+    myFileSystemTree.updateTree()
     myFileSystemTree.getTree.getSelectionModel.addTreeSelectionListener(_ => UpdateCombo(myFileSystemTree))
     myFileSystemTree
   }
 
   private def setupCheckboxPanel() = {
     checkboxPanel = new CheckBoxList[String]()
+    //checkboxPanel.setPreferredSize(JBUI.size(300, 500))
     checkboxPanel.setCheckBoxListListener(
       (index: Int, value: Boolean) => {
         val item = checkboxPanel.getItemAt(index)
