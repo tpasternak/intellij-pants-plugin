@@ -61,7 +61,7 @@ class FastpassManager(project: Project,
                                                false, false)
     val internalTree = new com.intellij.ui.treeStructure.Tree()
     val myFileSystemTree = new FileSystemTreeImpl(project, descriptor, internalTree, null, null, null)
-    myFileSystemTree.select(dir, null) // todo hiddens?
+    myFileSystemTree.select(dir, null) // todo show hidden files?
     myFileSystemTree.updateTree()
     myFileSystemTree.getTree.getSelectionModel.addTreeSelectionListener(_ => updateCombo(myFileSystemTree))
     myFileSystemTree
@@ -91,7 +91,7 @@ class FastpassManager(project: Project,
     checkboxPanel.clear()
     if (selectedFile != null &&
         importedPantsRoots.exists(root => Paths.isParent(root.getPath, selectedFile.getPath)
-                                          && root.getPath != selectedFile.getPath)
+                                          && root.getPath != selectedFile.getPath) // todo report this to the user
     ) {
       updateCheckboxList(selectedFile)
     }
@@ -100,16 +100,23 @@ class FastpassManager(project: Project,
   var cache = new TargetListCache()
 
   private def updateCheckboxList(selectedFile: VirtualFile) = {
-    fillCheckboxList(List("Waiting"))
-    cache.get(selectedFile).thenApply[Unit](targets =>
+    val response = cache.get(selectedFile)
+    if(!response.isDone) {
+      fillCheckboxList(List("Waiting"))
+    }
+    cache.get(selectedFile).whenComplete((value, error) =>
                                               SwingUtilities.invokeLater { () => {
                                                 if (myFileSystemTree.getSelectedFile == selectedFile) {
-                                                  fillCheckboxList(targets)
+                                                  if(error == null) {
+                                                    fillCheckboxList(value)
+                                                  } else {
+                                                    fillCheckboxList(List("nothing")) // todo - jakiś ładniejszy komunikat
+                                                  }
                                                 }
                                               }})
   }
 
-  private def fillCheckboxList(target: List[String]) = {
+  private def fillCheckboxList(target: Iterable[String]) = {
     checkboxPanel.clear()
     target.foreach(item => {
       checkboxPanel.addItem(item, item, mySelectedItems.contains(item))
@@ -120,9 +127,9 @@ class FastpassManager(project: Project,
 import scala.collection.concurrent
 
 class TargetListCache {
-  var cache: concurrent.Map[VirtualFile, CompletableFuture[List[String]]]
-  = new ConcurrentHashMap[VirtualFile, CompletableFuture[List[String]]]().asScala
-  def get(file: VirtualFile): CompletableFuture[List[String]] = {
+  var cache: concurrent.Map[VirtualFile, CompletableFuture[Iterable[String]]]
+  = new ConcurrentHashMap[VirtualFile, CompletableFuture[Iterable[String]]]().asScala
+  def get(file: VirtualFile): CompletableFuture[Iterable[String]] = {
     cache.get(file) match {
       case Some(targets) => targets
       case None => {

@@ -3,10 +3,12 @@
 
 package com.twitter.intellij.pants.compiler.actions
 
+import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.util.Optional
 import java.util.concurrent.CompletableFuture
+import java.util.function.Supplier
 
 import com.intellij.openapi.actionSystem.{AnAction, AnActionEvent}
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
@@ -41,7 +43,7 @@ class BspAmendProjectAction extends AnAction{
     val dial = new FastpassManager(project.get, pantsRoots(project.get).head, targets, importedPantsRoots)
     dial.show()
     if(dial.isOK && dial.selectedItems != targets) {
-      dial.selectedItems.foreach(item => runAmend(event.getProject.getBasePath, item))
+      dial.selectedItems.foreach(item => runAmend(event.getProject.getBasePath, item)) // todo Złap błędy!!!!!!
       ExternalProjectUtil.refresh(project.get, BSP.ProjectSystemId)
     }
   }.getOrElse(())
@@ -69,16 +71,10 @@ object FastpassUtils {
     exitCode
   }
 
-  def availableTargetsIn(file: VirtualFile) = {
-    val pantsExecutable = PantsUtil.findPantsExecutable(file.getPath).get
-    val pantsExecutablePath = Paths.get(pantsExecutable.getParent.getPath)
-    val targetPath = Paths.get(file.getPath)
-    val targetDirId = pantsExecutablePath.relativize(targetPath)
-    val builderList = new ProcessBuilder(List(pantsExecutable.getPath, "list", targetDirId.toString + "::").asJava) // todo sprawdź czy dobrze rozumiesz o co chodzi z podwójnym dwukropkiem
-    val process = builderList.start()
-    process.onExit().thenApply[List[String]]{
-      process => IOUtils.toString(process.getInputStream, StandardCharsets.UTF_8).split("\n").toList
-    }
+  def availableTargetsIn(file: VirtualFile): CompletableFuture[Iterable[String]] = {
+    CompletableFuture.supplyAsync(
+      () => PantsUtil.listAllTargets( if (file.isDirectory) file.getPath + File.separator + "BUILD" else file.getPath).asScala //todo użyj stałej zamiast BUILD
+      )
   }
 
   def selectedTargets(basePath: String): Array[String] = {
