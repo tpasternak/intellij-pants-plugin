@@ -74,19 +74,17 @@ object FastpassUtils {
     val pantsExecutablePath = Paths.get(pantsExecutable.getParent.getPath)
     val targetPath = Paths.get(file.getPath)
     val targetDirId = pantsExecutablePath.relativize(targetPath)
-    val builderList = new ProcessBuilder("fastpass-list", pantsExecutable.getParent.getPath, targetDirId
-      .toString)
+    val builderList = new ProcessBuilder(List(pantsExecutable.getPath, "list", targetDirId.toString + "::").asJava) // todo sprawdź czy dobrze rozumiesz o co chodzi z podwójnym dwukropkiem
     val process = builderList.start()
-    (process.onExit().thenApply[List[String]]{
+    process.onExit().thenApply[List[String]]{
       process => IOUtils.toString(process.getInputStream, StandardCharsets.UTF_8).split("\n").toList
-    }, process)
+    }
   }
 
   def selectedTargets(basePath: String): Array[String] = {
     val builder = new ProcessBuilder("fastpass-get", s"${basePath}/.bsp/bloop.json")
     val process = builder.start()
     process.onExit().get() // todo handle cmd line output
-    val exitCode = process.exitValue()
     val list = IOUtils
       .toString(process.getInputStream, StandardCharsets.UTF_8)
       .split("\n")

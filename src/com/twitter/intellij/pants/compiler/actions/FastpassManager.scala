@@ -3,7 +3,7 @@
 
 package com.twitter.intellij.pants.compiler.actions
 
-import java.util.concurrent.CompletableFuture
+import java.util.concurrent.{CompletableFuture, ConcurrentHashMap, ConcurrentMap}
 
 import com.intellij.CommonBundle
 import com.intellij.history.core.Paths
@@ -97,28 +97,34 @@ class FastpassManager(project: Project,
     }
   }
 
-  private def updateCheckboxList(selectedFile: VirtualFile) = {
-   cache.get(selectedFile) match {
-      case Some(targets) => fillCheckboxList(targets)
-      case None =>
-        FastpassUtils.availableTargetsIn(selectedFile)._1
-          .thenApply[Unit](targets =>
-                             SwingUtilities.invokeLater { () => {
-                               cache = cache.updated(selectedFile, targets)
-                               if (myFileSystemTree.getSelectedFile == selectedFile) {
-                                 fillCheckboxList(targets)
-                               }
-                             }
-                             })
-    }
-  }
+  var cache = new TargetListCache()
 
-  var cache: Map[VirtualFile, List[String]] = Map()
+  private def updateCheckboxList(selectedFile: VirtualFile) = {
+    cache.get(selectedFile).thenApply[Unit](targets =>
+                                              SwingUtilities.invokeLater { () => {
+                                                if (myFileSystemTree.getSelectedFile == selectedFile) {
+                                                  fillCheckboxList(targets)
+                                                }
+                                              }})
+  }
 
   private def fillCheckboxList(target: List[String]) = {
     checkboxPanel.clear()
     target.foreach(item => {
       checkboxPanel.addItem(item, item, mySelectedItems.contains(item))
     })
+  }
+}
+
+import scala.collection.concurrent
+
+class TargetListCache(var cache: concurrent.Map[VirtualFile, List[String]] = new ConcurrentHashMap[VirtualFile, List[String]]().asScala) {
+  def get(file: VirtualFile): CompletableFuture[List[String]] = {
+    val result = cache.get(file) match {
+      case Some(targets) => CompletableFuture.completedFuture(targets)
+      case None => FastpassUtils.availableTargetsIn(file)
+    }
+    result.whenComplete((value, error) => if (error == null) cache.put(file, value))
+    result
   }
 }
