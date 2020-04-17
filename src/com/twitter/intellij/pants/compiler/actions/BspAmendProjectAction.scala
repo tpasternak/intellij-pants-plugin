@@ -6,6 +6,7 @@ package com.twitter.intellij.pants.compiler.actions
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.util.Optional
+import java.util.concurrent.CompletableFuture
 
 import com.intellij.openapi.actionSystem.{AnAction, AnActionEvent}
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
@@ -21,7 +22,6 @@ import org.jetbrains.bsp.{BSP, Icons}
 
 import scala.collection.JavaConverters._
 import scala.util.Try
-
 import FastpassUtils._
 
 class BspAmendProjectAction extends AnAction{
@@ -69,16 +69,17 @@ object FastpassUtils {
     exitCode
   }
 
-  def availableTargets(file: VirtualFile) = {
+  def availableTargetsIn(file: VirtualFile) = {
     val pantsExecutable = PantsUtil.findPantsExecutable(file.getPath).get
     val pantsExecutablePath = Paths.get(pantsExecutable.getParent.getPath)
     val targetPath = Paths.get(file.getPath)
     val targetDirId = pantsExecutablePath.relativize(targetPath)
     val builderList = new ProcessBuilder("fastpass-list", pantsExecutable.getParent.getPath, targetDirId
       .toString)
-    val processList = builderList.start().onExit().get()
-    val list = IOUtils.toString(processList.getInputStream, StandardCharsets.UTF_8).split("\n")
-    list
+    val process = builderList.start()
+    (process.onExit().thenApply[List[String]]{
+      process => IOUtils.toString(process.getInputStream, StandardCharsets.UTF_8).split("\n").toList
+    }, process)
   }
 
   def selectedTargets(basePath: String): Array[String] = {
