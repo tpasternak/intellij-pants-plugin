@@ -3,6 +3,7 @@
 
 package com.twitter.intellij.pants.compiler.actions
 
+import java.awt.Component
 import java.util.concurrent.{CompletableFuture, ConcurrentHashMap, ConcurrentMap}
 
 import com.intellij.CommonBundle
@@ -23,7 +24,7 @@ import scala.collection.JavaConverters._
 
 class FastpassManager(project: Project,
                       dir: VirtualFile,
-                      initiallySelectedItems: Set[String],
+                      importedTargets: Set[String],
                       importedPantsRoots: Set[VirtualFile]
                      ) extends DialogWrapper(project, false) {
   setTitle("Fastpass manager")
@@ -34,13 +35,13 @@ class FastpassManager(project: Project,
 
   var cache = new TargetListCache()
 
-  var mySelectedItems: Set[String] = initiallySelectedItems
+  var mySelectedTargets: Set[String] = importedTargets
 
   var myPanel: JPanel = _
 
   var targetsCheckboxList: TargetsCheckboxList = _
 
-  def selectedItems: Set[String] = mySelectedItems
+  def selectedItems: Set[String] = mySelectedTargets
 
   override def createCenterPanel(): JComponent = {
     myPanel = new JPanel()
@@ -49,7 +50,7 @@ class FastpassManager(project: Project,
     val scrollPaneFileTree = ScrollPaneFactory.createScrollPane(myFileSystemTree.getTree);
     scrollPaneFileTree.setPreferredSize(JBUI.size(400,500))
 
-    targetsCheckboxList = new TargetsCheckboxList(item => mySelectedItems = mySelectedItems + item, item => mySelectedItems = mySelectedItems - item)
+    targetsCheckboxList = new TargetsCheckboxList(item => mySelectedTargets = mySelectedTargets + item, item => mySelectedTargets = mySelectedTargets - item)
 
     myPanel.add(scrollPaneFileTree);
     myPanel.add(targetsCheckboxList)
@@ -84,25 +85,26 @@ class FastpassManager(project: Project,
   }
 
   private def updateCheckboxList(selectedFile: VirtualFile): CompletableFuture[Iterable[String]] = {
-    val response = cache.get(selectedFile)
-    if(!response.isDone) {
+    val targetList = cache.get(selectedFile)
+    if(!targetList.isDone) {
       targetsCheckboxList.setLoading()
+      myPanel.updateUI()
     }
     cache.get(selectedFile)
       .whenComplete((value, error) =>
                       SwingUtilities.invokeLater { () => {
                         if (myFileSystemTree.getSelectedFile == selectedFile) {
                           if(error == null) {
-                            targetsCheckboxList.updateTargetsList(value, mySelectedItems)
+                            targetsCheckboxList.setItems(value, mySelectedTargets)
+                            myPanel.updateUI()
                           } else {
-                            targetsCheckboxList.updateTargetsList(List(), Set())
+                            targetsCheckboxList.setItems(List(), Set())
+                            myPanel.updateUI()
                           }
                         }
                       }})
   }
 }
-
-
 
 class TargetListCache {
   var cache: concurrent.Map[VirtualFile, CompletableFuture[Iterable[String]]] =
@@ -122,42 +124,43 @@ class TargetListCache {
 
 class TargetsCheckboxList(onSelection: String => Unit,
                           onDeselection: String => Unit,
-                         ) extends JPanel {
+                         ) extends JComponent {
+  this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS))
+
   var checkboxPanel: CheckBoxList[String] = new CheckBoxList[String]()
-  var myTargetsContainer: JPanel = _
+  var mainPanel: JPanel = _
   var myScrollPaneCheckbox: JScrollPane = _
 
   checkboxPanel.setCheckBoxListListener ((index, value) => {
     val item = checkboxPanel.getItemAt(index)
     if (value) onSelection(item) else onDeselection(item)
   })
-
   myScrollPaneCheckbox = ScrollPaneFactory.createScrollPane(checkboxPanel)
-  myTargetsContainer = new JPanel ()
-  myTargetsContainer.setLayout(new BoxLayout(myTargetsContainer, BoxLayout.Y_AXIS))
-  myTargetsContainer.add(new JLabel(icons.DvcsImplIcons.CurrentBranchLabel))
-  this.setPreferredSize(JBUI.size(300, 500))
-  this.add(myTargetsContainer)
-  this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS))
 
-  def fillCheckboxList(targets: Iterable[String], selected: Set[String]) = {
+  mainPanel = new JPanel ()
+  mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS))
+
+  mainPanel.add(myScrollPaneCheckbox)
+  mainPanel.setPreferredSize(JBUI.size(300, 500))
+  this.add(mainPanel)
+
+
+  private def updateCheckboxList(targets: Iterable[String], selected: Set[String]) = {
     checkboxPanel.setItems(targets.toList.asJava, x => x)
     targets.foreach(item => {
       checkboxPanel.setItemSelected(item, selected.contains(item))
     })
   }
 
-  def updateTargetsListWithMessage(icon: JComponent) = {
-    myTargetsContainer.remove(0)
-    myTargetsContainer.add (icon)
-    this.updateUI()
+  private def updateTargetsListWithMessage(icon: JComponent): Component = {
+    mainPanel.remove(0)
+    mainPanel.add(icon)
   }
 
-  def updateTargetsList(value: Iterable[String], selected: Set[String]) = {
-    myTargetsContainer.remove(0)
-    myTargetsContainer.add(myScrollPaneCheckbox)
-    fillCheckboxList(value, selected)
-    this.updateUI()
+  def setItems(value: Iterable[String], selected: Set[String]): Unit = {
+    mainPanel.remove(0)
+    mainPanel.add(myScrollPaneCheckbox)
+    updateCheckboxList(value, selected)
   }
 
   def setLoading() = {
