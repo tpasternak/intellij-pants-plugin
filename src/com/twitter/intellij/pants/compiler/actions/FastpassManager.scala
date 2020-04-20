@@ -6,20 +6,20 @@ package com.twitter.intellij.pants.compiler.actions
 import java.util.concurrent.{CompletableFuture, ConcurrentHashMap, ConcurrentMap}
 
 import com.intellij.CommonBundle
+
+import scala.collection.concurrent
 import com.intellij.history.core.Paths
-import com.intellij.openapi.application.{Application, ApplicationManager}
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.fileChooser.ex.FileSystemTreeImpl
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.ui.treeStructure.Tree
 import com.intellij.ui.{CheckBoxList, CheckBoxListListener, ScrollPaneFactory}
 import com.intellij.util.ui.{AsyncProcessIcon, JBUI}
 import javax.swing.{BoxLayout, Icon, JComponent, JLabel, JPanel, JScrollPane, SwingConstants, SwingUtilities}
 
 import scala.collection.JavaConverters._
-import scala.concurrent.Future
-import scala.util.Try
 
 class FastpassManager(project: Project,
                       dir: VirtualFile,
@@ -52,7 +52,7 @@ class FastpassManager(project: Project,
     targetsCheckboxList = new TargetsCheckboxList(item => mySelectedItems = mySelectedItems + item, item => mySelectedItems = mySelectedItems - item)
 
     myPanel.add(scrollPaneFileTree);
-    myPanel.add (targetsCheckboxList, 1)
+    myPanel.add(targetsCheckboxList)
     myPanel
   }
 
@@ -60,51 +60,49 @@ class FastpassManager(project: Project,
     val descriptor = new FileChooserDescriptor(true, false,
                                                false, false,
                                                false, false)
-    val internalTree = new com.intellij.ui.treeStructure.Tree()
-    val myFileSystemTree = new FileSystemTreeImpl(project, descriptor, internalTree, null, null, null)
-    myFileSystemTree.select(dir, null) // todo show hidden files?
+    val myFileSystemTree = new FileSystemTreeImpl(project, descriptor,  new Tree(), null, null, null)
+    myFileSystemTree.select(dir, null)
+    myFileSystemTree.expand(dir, null)
+    myFileSystemTree.showHiddens(true)
     myFileSystemTree.updateTree()
-    myFileSystemTree.getTree.getSelectionModel.addTreeSelectionListener(_ => updateCombo(myFileSystemTree))
+    myFileSystemTree.getTree.getSelectionModel.addTreeSelectionListener(_ => handleTreeSelection(myFileSystemTree))
     myFileSystemTree
   }
 
-
-  var running: Option[Process] = None
-
-
-  private def updateCombo(myFileSystemTree: FileSystemTreeImpl) = {
-    @volatile var selectedFile = myFileSystemTree.getSelectedFile
+  private def handleTreeSelection(myFileSystemTree: FileSystemTreeImpl) = {
+    val selectedFile = myFileSystemTree.getSelectedFile
     if (selectedFile != null &&
-        importedPantsRoots.exists(root => Paths.isParent(root.getPath, selectedFile.getPath)
-                                          && root.getPath != selectedFile.getPath) // todo report this to the user
+        importedPantsRoots.exists(root => belongsToImportedPantsProject(selectedFile, root))
     ) {
       updateCheckboxList(selectedFile)
     }
   }
 
-  private def updateCheckboxList(selectedFile: VirtualFile) = {
-    val response = cache.get(selectedFile)
-    if(!response.isDone) {
-      targetsCheckboxList.updateTargetsListWithMessage(new AsyncProcessIcon("Loading targets list")) // todo do bundla
-    }
-    cache.get(selectedFile).whenComplete((value, error) =>
-                                              SwingUtilities.invokeLater { () => {
-                                                if (myFileSystemTree.getSelectedFile == selectedFile) {
-                                                  if(error == null) {
-                                                    targetsCheckboxList.updateTargetsList(value, mySelectedItems)
-                                                    myPanel.updateUI()
-                                                  } else {
-                                                    targetsCheckboxList.updateTargetsList(List(), Set())
-                                                    myPanel.updateUI()
-                                                  }
-                                                }
-                                              }})
+  private def belongsToImportedPantsProject(selectedFile: VirtualFile,
+                                            root: VirtualFile): Boolean = {
+    Paths.isParent(root.getPath, selectedFile.getPath)    && root    .getPath != selectedFile.getPath
   }
 
-
+  private def updateCheckboxList(selectedFile: VirtualFile): CompletableFuture[Iterable[String]] = {
+    val response = cache.get(selectedFile)
+    if(!response.isDone) {
+      targetsCheckboxList.setLoading()
+    }
+    cache.get(selectedFile)
+      .whenComplete((value, error) =>
+                      SwingUtilities.invokeLater { () => {
+                        if (myFileSystemTree.getSelectedFile == selectedFile) {
+                          if(error == null) {
+                            targetsCheckboxList.updateTargetsList(value, mySelectedItems)
+                          } else {
+                            targetsCheckboxList.updateTargetsList(List(), Set())
+                          }
+                        }
+                      }})
+  }
 }
 
-import scala.collection.concurrent
+
 
 class TargetListCache {
   var cache: concurrent.Map[VirtualFile, CompletableFuture[Iterable[String]]] =
@@ -125,19 +123,13 @@ class TargetListCache {
 class TargetsCheckboxList(onSelection: String => Unit,
                           onDeselection: String => Unit,
                          ) extends JPanel {
-
   var checkboxPanel: CheckBoxList[String] = new CheckBoxList[String]()
   var myTargetsContainer: JPanel = _
   var myScrollPaneCheckbox: JScrollPane = _
 
   checkboxPanel.setCheckBoxListListener ((index, value) => {
     val item = checkboxPanel.getItemAt(index)
-    if (value) {
-      onSelection(item)
-    }
-    else {
-      onDeselection(item)
-    }
+    if (value) onSelection(item) else onDeselection(item)
   })
 
   myScrollPaneCheckbox = ScrollPaneFactory.createScrollPane(checkboxPanel)
@@ -168,4 +160,7 @@ class TargetsCheckboxList(onSelection: String => Unit,
     this.updateUI()
   }
 
+  def setLoading() = {
+    updateTargetsListWithMessage(new AsyncProcessIcon(""))
+  }
 }
