@@ -75,7 +75,7 @@
       </action>
       <action id="com.twitter.intellij.pants.compiler.actions.BspAmendProjectAction"
               class="com.twitter.intellij.pants.compiler.actions.BspAmendProjectAction"
-              text="Extend BSP project">
+              text="Fastpass imports">
       </action>
     </group>
 
