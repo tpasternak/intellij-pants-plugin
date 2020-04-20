@@ -7,28 +7,41 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.util.Optional
-import java.util.concurrent.CompletableFuture
-import java.util.function.Supplier
+import java.util.concurrent.{CompletableFuture, ConcurrentHashMap}
 
 import com.intellij.openapi.actionSystem.{AnAction, AnActionEvent}
-import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
-import com.intellij.openapi.fileChooser.{FileChooserDescriptor, FileChooserFactory}
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootManager
-import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.vfs.VirtualFile
-import com.twitter.intellij.pants.util.{ExternalProjectUtil, PantsUtil}
+import com.twitter.intellij.pants.util.{ExternalProjectUtil, PantsConstants, PantsUtil}
 import org.apache.commons.io.IOUtils
-import org.jetbrains.bsp.{BSP, Icons}
+import org.jetbrains.bsp.BSP
 
 import scala.collection.JavaConverters._
 import scala.util.Try
 import FastpassUtils._
 
+import scala.collection.concurrent
+
+sealed class TargetListCache {
+  var cache: concurrent.Map[VirtualFile, CompletableFuture[Iterable[String]]] =
+    new ConcurrentHashMap[VirtualFile, CompletableFuture[Iterable[String]]]().asScala
+
+  def get(file: VirtualFile): CompletableFuture[Iterable[String]] = {
+    cache.get(file) match {
+      case Some(targets) => targets
+      case None => {
+        val result = FastpassUtils.availableTargetsIn(file)
+        cache.put(file, result)
+        result
+      }
+    }
+  }
+}
+
 class BspAmendProjectAction extends AnAction{
   class Error(msg: String) extends RuntimeException
-
 
   type Result[T] = Either[Error, T]
 
@@ -39,13 +52,17 @@ class BspAmendProjectAction extends AnAction{
   override def actionPerformed(event: AnActionEvent): Unit = Try {
     val project = Option(event.getProject)
     val targets = selectedTargets(project.get.getBasePath).toSet
-    val importedPantsRoots =  pantsRoots(project.get)
-    val dial = new FastpassManager(project.get, pantsRoots(project.get).head, targets, importedPantsRoots)
-    dial.show()
-    if(dial.isOK && dial.selectedItems != targets) {
-      dial.selectedItems.foreach(item => runAmend(event.getProject.getBasePath, item)) // todo Złap błędy!!!!!!
-      ExternalProjectUtil.refresh(project.get, BSP.ProjectSystemId)
-    }
+    val importedPantsRoots = pantsRoots(project.get)
+    val targetsListCache = new TargetListCache
+    FastpassManager
+      .promptForTargetsToImport(project.get, pantsRoots(project.get).head, targets, importedPantsRoots, file => targetsListCache.get(file))
+      .foreach {
+        newTargets =>
+          if(newTargets != targets) {
+            newTargets.foreach(item => runAmend(event.getProject.getBasePath, item)) // TODO złap błedy
+            ExternalProjectUtil.refresh(project.get, BSP.ProjectSystemId)
+          }
+      }
   }.getOrElse(())
 }
 
@@ -73,7 +90,7 @@ object FastpassUtils {
 
   def availableTargetsIn(file: VirtualFile): CompletableFuture[Iterable[String]] = {
     CompletableFuture.supplyAsync(
-      () => PantsUtil.listAllTargets( if (file.isDirectory) file.getPath + File.separator + "BUILD" else file.getPath).asScala //todo użyj stałej zamiast BUILD
+      () => PantsUtil.listAllTargets(if (file.isDirectory) Paths.get(file.getPath, "BUILD").toString else file.getPath).asScala // todo użyj stałej zamiast BUILD
       )
   }
 
