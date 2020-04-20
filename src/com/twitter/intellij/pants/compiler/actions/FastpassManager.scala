@@ -15,7 +15,7 @@ import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.{CheckBoxList, ScrollPaneFactory}
 import com.intellij.util.ui.{AsyncProcessIcon, JBUI}
-import javax.swing.{BoxLayout, JComponent, JLabel, JPanel, JScrollPane, SwingConstants, SwingUtilities}
+import javax.swing.{BoxLayout, Icon, JComponent, JLabel, JPanel, JScrollPane, SwingConstants, SwingUtilities}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
@@ -36,10 +36,14 @@ class FastpassManager(project: Project,
 
   var mySelectedItems: Set[String] = initiallySelectedItems
 
+  var myTargetsContainer: JPanel = _
+
 
   var myPanel: JPanel = _
 
   var myScrollPaneCheckbox: JScrollPane = _
+
+  var cache = new TargetListCache()
 
   def selectedItems: Set[String] = mySelectedItems
 
@@ -49,13 +53,15 @@ class FastpassManager(project: Project,
     myPanel.setLayout(new BoxLayout(myPanel,BoxLayout.X_AXIS))
     myFileSystemTree = setupFileTree
     val scrollPaneFileTree = ScrollPaneFactory.createScrollPane(myFileSystemTree.getTree);
-    scrollPaneFileTree.setPreferredSize(JBUI.size(300,500))
+    scrollPaneFileTree.setPreferredSize(JBUI.size(400,500))
     myPanel.add(scrollPaneFileTree);
 
     myScrollPaneCheckbox = ScrollPaneFactory.createScrollPane(checkboxPanel)
-    myPanel.add(myScrollPaneCheckbox, 1)
-    myPanel.remove(1)
-    myPanel.add (new JLabel(icons.DvcsImplIcons.CurrentBranchLabel), 1)
+    myTargetsContainer = new JPanel ()
+    myTargetsContainer.setLayout(new BoxLayout(myTargetsContainer, BoxLayout.Y_AXIS))
+    myTargetsContainer.add(new JLabel(icons.DvcsImplIcons.CurrentBranchLabel))
+    myTargetsContainer.setPreferredSize(JBUI.size(300, 500))
+    myPanel.add (myTargetsContainer, 1)
     myPanel
   }
 
@@ -100,35 +106,34 @@ class FastpassManager(project: Project,
     }
   }
 
-  var cache = new TargetListCache()
-
   private def updateCheckboxList(selectedFile: VirtualFile) = {
     val response = cache.get(selectedFile)
     if(!response.isDone) {
-      myPanel.remove(1)
-      myPanel.add (new AsyncProcessIcon(""), 1)
-      myPanel.updateUI()
-      //fillCheckboxList(List("Waiting"))
+      updateTargetsListWithMessage(new AsyncProcessIcon("Loading targets list")) // todo do bundla
     }
     cache.get(selectedFile).whenComplete((value, error) =>
                                               SwingUtilities.invokeLater { () => {
                                                 if (myFileSystemTree.getSelectedFile == selectedFile) {
                                                   if(error == null) {
-
-                                                    myPanel.remove(1) // todo JAKOŚ ŁADNIEJ!!!!!
-                                                    myPanel.add(myScrollPaneCheckbox, 1)
-                                                    myPanel.updateUI()
-
-                                                    fillCheckboxList(value)
+                                                    updateTargetsList(value)
                                                   } else {
-                                                    myPanel.remove(1)
-                                                    myPanel.add (new JLabel(icons.DvcsImplIcons.CurrentBranchLabel), 1)
-                                                    myPanel.updateUI()
-
-//                                                    fillCheckboxList(List("nothing")) // todo - jakiś ładniejszy komunikat
+                                                    updateTargetsList(List())
                                                   }
                                                 }
                                               }})
+  }
+
+  private def updateTargetsList(value: Iterable[String]) = {
+    myTargetsContainer.remove(0)
+    myTargetsContainer.add(myScrollPaneCheckbox)
+    fillCheckboxList(value)
+    myPanel.updateUI()
+  }
+
+  private def updateTargetsListWithMessage(icon: JComponent) = {
+    myTargetsContainer.remove(0)
+    myTargetsContainer.add (icon)
+    myPanel.updateUI()
   }
 
   private def fillCheckboxList(targets: Iterable[String]) = {
