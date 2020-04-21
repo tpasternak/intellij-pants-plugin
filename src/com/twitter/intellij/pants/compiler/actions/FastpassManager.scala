@@ -93,7 +93,7 @@ sealed class FastpassManager(project: Project,
 
   private def belongsToImportedPantsProject(selectedFile: VirtualFile,
                                             root: VirtualFile): Boolean = {
-    Paths.isParent(root.getPath, selectedFile.getPath)    && root    .getPath != selectedFile.getPath
+    Paths.isParent(root.getPath, selectedFile.getPath) && root.getPath != selectedFile.getPath
   }
 
   private def updateCheckboxList(selectedFile: VirtualFile): CompletableFuture[Iterable[String]] = {

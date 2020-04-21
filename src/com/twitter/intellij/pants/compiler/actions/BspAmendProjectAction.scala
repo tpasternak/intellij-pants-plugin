@@ -28,7 +28,8 @@ sealed class TargetListCache {
   var cache: concurrent.Map[VirtualFile, CompletableFuture[Iterable[String]]] =
     new ConcurrentHashMap[VirtualFile, CompletableFuture[Iterable[String]]]().asScala
 
-  def get(file: VirtualFile): CompletableFuture[Iterable[String]] = {
+  // todo z jakiegoś cholernego powodu pada import `res:`
+  def getTargetsList(file: VirtualFile): CompletableFuture[Iterable[String]] = {
     cache.get(file) match {
       case Some(targets) => targets
       case None => {
@@ -55,7 +56,7 @@ class BspAmendProjectAction extends AnAction{
     val importedPantsRoots = pantsRoots(project.get)
     val targetsListCache = new TargetListCache
     FastpassManager
-      .promptForTargetsToImport(project.get, pantsRoots(project.get).head, targets, importedPantsRoots, file => targetsListCache.get(file))
+      .promptForTargetsToImport(project.get, pantsRoots(project.get).head, targets, importedPantsRoots, file => targetsListCache.getTargetsList(file))
       .foreach {
         newTargets =>
           if(newTargets != targets) {
