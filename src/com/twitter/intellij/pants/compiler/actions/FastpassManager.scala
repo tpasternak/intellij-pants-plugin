@@ -6,7 +6,6 @@ package com.twitter.intellij.pants.compiler.actions
 import java.util.concurrent.{CompletableFuture, ConcurrentHashMap}
 
 import com.intellij.CommonBundle
-
 import com.intellij.history.core.Paths
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.fileChooser.ex.FileSystemTreeImpl
@@ -19,6 +18,7 @@ import com.intellij.util.ui.{AsyncProcessIcon, JBUI}
 import javax.swing.{BoxLayout, JComponent, JPanel, JScrollPane, SwingUtilities}
 
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 object FastpassManager{
   def promptForTargetsToImport(
@@ -27,7 +27,7 @@ object FastpassManager{
                                 importedTargets: Set[String],
                                 importedPantsRoots: Set[VirtualFile],
                                 fetchTargetsList: VirtualFile => CompletableFuture[Iterable[String]]
-                              ): Option[Set[String]] = {
+                              ): Try[Option[Set[String]]] = Try {
     val dial = new FastpassManager(project, selectedDirectory, importedTargets, importedPantsRoots, fetchTargetsList)
     dial.show()
     if(dial.isOK) Some(dial.selectedItems) else None
