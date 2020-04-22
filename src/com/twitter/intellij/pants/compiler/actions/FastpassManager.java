@@ -70,7 +70,7 @@ class FastpassManager extends DialogWrapper {
 
   FileSystemTreeImpl myFileSystemTree = null;
 
-  TargetsCheckboxList myTargetsListPanel = null;
+  FastpassTargetsCheckboxList myTargetsListPanel = null;
 
   @NotNull
   public Collection<String> selectedItems() {
@@ -86,15 +86,9 @@ class FastpassManager extends DialogWrapper {
     fileSystemTreeScrollPane.setPreferredSize(JBUI.size(400, 500));
     mainPanel.add(fileSystemTreeScrollPane);
 
-    myTargetsListPanel = new TargetsCheckboxList(
-      item -> {
-        mySelectedTargets.add(item);
-        return BoxedUnit.UNIT;
-      },
-      item -> {
-        mySelectedTargets.remove(item);
-        return BoxedUnit.UNIT;
-      }
+    myTargetsListPanel = new FastpassTargetsCheckboxList(
+      item -> mySelectedTargets.add(item),
+      item -> mySelectedTargets.remove(item)
     );
     mainPanel.add(myTargetsListPanel);
     return mainPanel;
@@ -144,7 +138,7 @@ class FastpassManager extends DialogWrapper {
                                      mainPanel.updateUI();
                                    }
                                    else {
-                                     myTargetsListPanel.setItems(Collections.emptyList(), Collections.emptyList());
+                                     myTargetsListPanel.setItems(Collections.emptyList(), Collections.emptySet());
                                      mainPanel.updateUI();
                                    }
                                  }
