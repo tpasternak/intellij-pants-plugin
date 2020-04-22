@@ -34,7 +34,7 @@ sealed class TargetListCache {
     cache.get(file) match {
       case Some(targets) => targets
       case None => {
-        val result = FastpassUtils.availableTargetsIn(file)
+        val result = FastpassUtils2.availableTargetsIn(file).thenApply(_.asScala)
         cache.put(file, result)
         result
       }
@@ -81,9 +81,5 @@ object FastpassUtils {
   }
 
 
-  def availableTargetsIn(file: VirtualFile): CompletableFuture[Iterable[String]] = {
-    CompletableFuture.supplyAsync(
-      () => PantsUtil.listAllTargets(if (file.isDirectory) Paths.get(file.getPath, "BUILD").toString else file.getPath).asScala // todo użyj stałej zamiast BUILD
-      )
-  }
+
 }

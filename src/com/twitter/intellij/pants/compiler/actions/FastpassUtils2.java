@@ -10,8 +10,12 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.lang.reflect.Executable;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -62,19 +66,9 @@ public class FastpassUtils2 {
     return list;
   }
 
-  //def availableTargetsIn(file: VirtualFile): CompletableFuture[Iterable[String]] = {
-  //  CompletableFuture.supplyAsync(
-  //    () => PantsUtil.listAllTargets(if (file.isDirectory) Paths.get(file.getPath, "BUILD").toString else file.getPath).asScala // todo użyj stałej zamiast BUILD
-  //    )
-  //}
-
-  //def selectedTargets(basePath: String): Array[String] = {
-  //  val builder = new ProcessBuilder("fastpass-get", s"${basePath}/.bsp/bloop.json")
-  //  val process = builder.start()
-  //  process.onExit().get() // todo handle cmd line output
-  //  val list = IOUtils
-  //    .toString(process.getInputStream, StandardCharsets.UTF_8)
-  //    .split("\n")
-  //  list
-  //}
+  public static CompletableFuture<Collection<String>> availableTargetsIn(VirtualFile file) {
+    return CompletableFuture.supplyAsync(
+      () -> PantsUtil.listAllTargets( (file.isDirectory())?  Paths.get(file.getPath(), "BUILD").toString() : file.getPath()) // todo użyj stałej zamiast BUILD
+      );
+  }
 }
