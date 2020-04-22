@@ -27,7 +27,7 @@ object FastpassManager{
                                 importedTargets: Set[String],
                                 importedPantsRoots: Set[VirtualFile],
                                 fetchTargetsList: VirtualFile => CompletableFuture[Iterable[String]]
-                              ): Try[Option[Set[String]]] = Try {
+                              ): Option[Set[String]] = {
     val dial = new FastpassManager(project, selectedDirectory, importedTargets, importedPantsRoots, fetchTargetsList)
     dial.show()
     if(dial.isOK) Some(dial.selectedItems) else None

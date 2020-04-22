@@ -51,26 +51,26 @@ sealed class BspAmendProjectAction extends AnAction{
     def toOption: Option[T] = Option(optional.orElseGet(null))
   }
 
-  override def actionPerformed(event: AnActionEvent): Unit = Try {
-    for {
-      project <- Try{ Option(event.getProject).get }
-      targets <- selectedTargets(project.getBasePath).map(_.toSet)
-      importedPantsRoots <- pantsRoots(project)
-      targetsListCache = new TargetListCache
-      newTargets <- FastpassManager.promptForTargetsToImport(project, importedPantsRoots.head, targets, importedPantsRoots, file => targetsListCache.getTargetsList(file))
-      _ = newTargets.map {
+  override def actionPerformed(event: AnActionEvent): Unit = try {
+      val project = Option(event.getProject).get
+      val targets = selectedTargets(project.getBasePath).toSet
+      val importedPantsRoots = FastpassUtils2.pantsRoots(project).asScala.toSet
+      val targetsListCache = new TargetListCache
+      val newTargets = FastpassManager.promptForTargetsToImport(project, importedPantsRoots.head, targets, importedPantsRoots, file => targetsListCache.getTargetsList(file))
+      newTargets.foreach {
         newTargets =>
           if(newTargets != targets) {
             refreshProjectsWithNewTargetsList(project, newTargets, event.getProject.getBasePath)
           }
       }
-    } yield ()
-  }.fold(logger.error, identity)
+  } catch {
+    case e: Throwable => logger.error(e)
+  }
 
   private def refreshProjectsWithNewTargetsList(project: Project,
                                                 newTargets: Set[String],
                                                 basePath: String) = {
-    amendAll(basePath, newTargets) // TODO złap błedy // a co jak jest więcej linked projektów?
+    FastpassUtils2.amendAll(basePath, newTargets.toList.asJava) // TODO złap błedy // a co jak jest więcej linked projektów?
     ExternalProjectUtil.refresh(project, BSP.ProjectSystemId)
   }
 }
@@ -80,26 +80,6 @@ object FastpassUtils {
     def toOption: Option[T] = Option(optional.orElseGet(null))
   }
 
-  def amendAll(basePath: String, newTargets: Set[String]) = Try {
-    newTargets.foreach(item => runAmend(basePath, item)) // todo jako jedna komenda
-  }
-
-  def pantsRoots(project: Project): Try[Set[VirtualFile]] = Try {
-    ModuleManager.getInstance(project).getModules.toList.flatMap {
-      module =>
-        ModuleRootManager.getInstance(module).getSourceRoots.flatMap {
-          sourceRoot => PantsUtil.findPantsExecutable(sourceRoot.getPath).toOption.map(_.getParent)
-        }
-    }.toSet
-  }
-
-  def runAmend(basePath: String, chosen: String): Int = {
-    val builder = new ProcessBuilder("fastpass-amend", s"${basePath}/.bsp/bloop.json", chosen)// todo 1. tutaj ma być bardziej getlinkedproject 2. musi się wywalić jeżeli projekt pantsowy nie jest w BSP
-    val process = builder.start()
-    process.onExit().get() // todo handle cmd line output
-    val exitCode = process.exitValue()
-    exitCode
-  }
 
   def availableTargetsIn(file: VirtualFile): CompletableFuture[Iterable[String]] = {
     CompletableFuture.supplyAsync(
@@ -107,7 +87,7 @@ object FastpassUtils {
       )
   }
 
-  def selectedTargets(basePath: String): Try[Array[String]] = Try {
+  def selectedTargets(basePath: String): Array[String] = {
     val builder = new ProcessBuilder("fastpass-get", s"${basePath}/.bsp/bloop.json")
     val process = builder.start()
     process.onExit().get() // todo handle cmd line output
