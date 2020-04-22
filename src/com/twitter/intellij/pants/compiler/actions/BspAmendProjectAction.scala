@@ -53,7 +53,7 @@ sealed class BspAmendProjectAction extends AnAction{
 
   override def actionPerformed(event: AnActionEvent): Unit = try {
       val project = Option(event.getProject).get
-      val targets = selectedTargets(project.getBasePath).toSet
+      val targets = FastpassUtils2.selectedTargets(project.getBasePath).toSet
       val importedPantsRoots = FastpassUtils2.pantsRoots(project).asScala.toSet
       val targetsListCache = new TargetListCache
       val newTargets = FastpassManager.promptForTargetsToImport(project, importedPantsRoots.head, targets, importedPantsRoots, file => targetsListCache.getTargetsList(file))
@@ -85,15 +85,5 @@ object FastpassUtils {
     CompletableFuture.supplyAsync(
       () => PantsUtil.listAllTargets(if (file.isDirectory) Paths.get(file.getPath, "BUILD").toString else file.getPath).asScala // todo użyj stałej zamiast BUILD
       )
-  }
-
-  def selectedTargets(basePath: String): Array[String] = {
-    val builder = new ProcessBuilder("fastpass-get", s"${basePath}/.bsp/bloop.json")
-    val process = builder.start()
-    process.onExit().get() // todo handle cmd line output
-    val list = IOUtils
-      .toString(process.getInputStream, StandardCharsets.UTF_8)
-      .split("\n")
-    list
   }
 }

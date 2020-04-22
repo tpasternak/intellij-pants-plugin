@@ -5,9 +5,11 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.twitter.intellij.pants.util.PantsUtil;
+import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Executable;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -47,6 +49,17 @@ public class FastpassUtils2 {
         }
     )
     ).collect(Collectors.toList());
+  }
+
+
+  public static String[] selectedTargets(String basePath) throws IOException, ExecutionException, InterruptedException {
+    ProcessBuilder builder = new ProcessBuilder("fastpass-get", basePath + ".bsp/bloop.json"); // todo slashes here
+    Process process = builder.start();
+    process.waitFor(); // todo handle cmd line output
+    String[] list = IOUtils
+      .toString(process.getInputStream(), StandardCharsets.UTF_8)
+      .split("\n");
+    return list;
   }
 
   //def availableTargetsIn(file: VirtualFile): CompletableFuture[Iterable[String]] = {
