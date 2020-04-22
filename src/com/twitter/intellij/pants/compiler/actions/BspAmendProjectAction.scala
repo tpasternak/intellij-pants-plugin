@@ -47,14 +47,8 @@ sealed class BspAmendProjectAction extends AnAction{
 
   case class Error(msg: String) extends RuntimeException
 
-  type Result[T] = Either[Error, T]
-
   implicit class OptionalExtension[T](optional: Optional[T]) {
     def toOption: Option[T] = Option(optional.orElseGet(null))
-  }
-
-  implicit class OptionExtension[T](option: Option[T]) {
-    def toResult(msg: String): Result[T] = option.toRight(Error(msg))
   }
 
   override def actionPerformed(event: AnActionEvent): Unit = Try {
@@ -64,16 +58,21 @@ sealed class BspAmendProjectAction extends AnAction{
       importedPantsRoots <- pantsRoots(project)
       targetsListCache = new TargetListCache
       newTargets <- FastpassManager.promptForTargetsToImport(project, importedPantsRoots.head, targets, importedPantsRoots, file => targetsListCache.getTargetsList(file))
-      _ = newTargets.foreach {
+      _ = newTargets.map {
         newTargets =>
           if(newTargets != targets) {
-            val basePath = event.getProject.getBasePath
-            amendAll(basePath, newTargets) // TODO złap błedy // a co jak jest więcej linked projektów?
-            ExternalProjectUtil.refresh(project, BSP.ProjectSystemId)
+            refreshProjectsWithNewTargetsList(project, newTargets, event.getProject.getBasePath)
           }
       }
     } yield ()
-  }.fold(error => logger.error(error), identity)
+  }.fold(logger.error, identity)
+
+  private def refreshProjectsWithNewTargetsList(project: Project,
+                                                newTargets: Set[String],
+                                                basePath: String) = {
+    amendAll(basePath, newTargets) // TODO złap błedy // a co jak jest więcej linked projektów?
+    ExternalProjectUtil.refresh(project, BSP.ProjectSystemId)
+  }
 }
 
 object FastpassUtils {
@@ -81,8 +80,8 @@ object FastpassUtils {
     def toOption: Option[T] = Option(optional.orElseGet(null))
   }
 
-  def amendAll(basePath: String, newTargets: Set[String]) = {
-    newTargets.foreach(item => runAmend(basePath, item))
+  def amendAll(basePath: String, newTargets: Set[String]) = Try {
+    newTargets.foreach(item => runAmend(basePath, item)) // todo jako jedna komenda
   }
 
   def pantsRoots(project: Project): Try[Set[VirtualFile]] = Try {
