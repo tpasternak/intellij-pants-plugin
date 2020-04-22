@@ -11,17 +11,13 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.twitter.intellij.pants.util.ExternalProjectUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.bsp.BSP;
-import scala.Option;
-import scala.collection.immutable.Set;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class FastpassBspAmendAction extends AnAction {
 
@@ -31,16 +27,16 @@ public class FastpassBspAmendAction extends AnAction {
   public void actionPerformed(@NotNull AnActionEvent event) {
     try {
       Project project = event.getProject(); // todo handle null
-      String[] targets = FastpassUtils.selectedTargets(project.getBasePath());
+      Set<String> targets = FastpassUtils.selectedTargets(project.getBasePath());
       List<VirtualFile> importedPantsRoots = FastpassUtils.pantsRoots(project);
       FastpassTargetListCache targetsListCache = new FastpassTargetListCache();
       // todo co jak importedPantsRootsSize ==0?
-      Optional<Collection<String>> newTargets = FastpassManager
-        .promptForTargetsToImport(project, importedPantsRoots.get(0), Stream.of(targets).collect(Collectors.toList()), importedPantsRoots,
+      Optional<Set<String>> newTargets = FastpassManager
+        .promptForTargetsToImport(project, importedPantsRoots.get(0), targets, importedPantsRoots,
                                   targetsListCache::getTargetsList
         );
 
-      if (newTargets.isPresent() && newTargets.get() != Stream.of(targets)) {
+      if (newTargets.isPresent() && !newTargets.get().equals(targets)) {
           refreshProjectsWithNewTargetsList(project, newTargets.get(), event.getProject().getBasePath());
       }
     }

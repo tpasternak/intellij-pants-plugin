@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -55,14 +56,14 @@ public class FastpassUtils {
   }
 
 
-  public static String[] selectedTargets(String basePath) throws IOException, ExecutionException, InterruptedException {
-    ProcessBuilder builder = new ProcessBuilder("fastpass-get", basePath + ".bsp/bloop.json"); // todo slashes here
+  public static Set<String> selectedTargets(String basePath) throws IOException, InterruptedException {
+    ProcessBuilder builder = new ProcessBuilder("fastpass-get", basePath + "/.bsp/bloop.json"); // todo slashes here
     Process process = builder.start();
     process.waitFor(); // todo handle cmd line output
     String[] list = IOUtils
       .toString(process.getInputStream(), StandardCharsets.UTF_8)
       .split("\n");
-    return list;
+    return Stream.of(list).collect(Collectors.toSet());
   }
 
   public static CompletableFuture<Collection<String>> availableTargetsIn(VirtualFile file) {

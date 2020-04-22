@@ -7,6 +7,7 @@ package com.twitter.intellij.pants.compiler.actions;
 import com.intellij.openapi.vfs.VirtualFile;
 
 import java.util.Collection;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
