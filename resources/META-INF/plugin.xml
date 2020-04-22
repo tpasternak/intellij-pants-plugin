@@ -74,7 +74,7 @@
               text="Compile target(s) in the selected editor">
       </action>
       <action id="com.twitter.intellij.pants.compiler.actions.BspAmendProjectAction"
-              class="com.twitter.intellij.pants.compiler.actions.BspAmendProjectAction"
+              class="com.twitter.intellij.pants.compiler.actions.FastpassBspAmendAction"
               text="Fastpass imports">
       </action>
     </group>

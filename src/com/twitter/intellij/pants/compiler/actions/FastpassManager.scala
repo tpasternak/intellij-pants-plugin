@@ -3,6 +3,8 @@
 
 package com.twitter.intellij.pants.compiler.actions
 
+import java.util
+import java.util.Optional
 import java.util.concurrent.{CompletableFuture, ConcurrentHashMap}
 
 import com.intellij.CommonBundle
@@ -24,21 +26,21 @@ object FastpassManager{
   def promptForTargetsToImport(
                                 project: Project,
                                 selectedDirectory: VirtualFile,
-                                importedTargets: Set[String],
-                                importedPantsRoots: Set[VirtualFile],
-                                fetchTargetsList: VirtualFile => CompletableFuture[Iterable[String]]
-                              ): Option[Set[String]] = {
+                                importedTargets: util.Collection[String],
+                                importedPantsRoots: util.Collection[VirtualFile],
+                                fetchTargetsList: VirtualFile => CompletableFuture[util.Collection[String]]
+                              ): Optional[util.Collection[String]] = {
     val dial = new FastpassManager(project, selectedDirectory, importedTargets, importedPantsRoots, fetchTargetsList)
     dial.show()
-    if(dial.isOK) Some(dial.selectedItems) else None
+    if(dial.isOK) Optional.of(dial.selectedItems.asJava) else Optional.empty()
   }
 }
 
 sealed class FastpassManager(project: Project,
-                      dir: VirtualFile,
-                      importedTargets: Set[String],
-                      importedPantsRoots: Set[VirtualFile],
-                      targetsListFetcher: VirtualFile => CompletableFuture[Iterable[String]]
+                             dir: VirtualFile,
+                             importedTargets: util.Collection[String],
+                             importedPantsRoots: util.Collection[VirtualFile],
+                             targetsListFetcher: VirtualFile => CompletableFuture[util.Collection[String]]
                      ) extends DialogWrapper(project, false) {
   setTitle("Fastpass manager")
   setOKButtonText(CommonBundle.getOkButtonText)
@@ -50,7 +52,7 @@ sealed class FastpassManager(project: Project,
 
   var myTargetsListPanel: TargetsCheckboxList = _
 
-  var mySelectedTargets: Set[String] = importedTargets
+  var mySelectedTargets: Set[String] = importedTargets.asScala.toSet
 
   def selectedItems: Set[String] = mySelectedTargets
 
@@ -85,7 +87,7 @@ sealed class FastpassManager(project: Project,
   private def handleTreeSelection(myFileSystemTree: FileSystemTreeImpl) = {
     val selectedFile = myFileSystemTree.getSelectedFile
     if (selectedFile != null &&
-        importedPantsRoots.exists(root => belongsToImportedPantsProject(selectedFile, root))
+        importedPantsRoots.asScala.exists(root => belongsToImportedPantsProject(selectedFile, root))
     ) {
       updateCheckboxList(selectedFile)
     }
@@ -96,7 +98,7 @@ sealed class FastpassManager(project: Project,
     Paths.isParent(root.getPath, selectedFile.getPath) && root.getPath != selectedFile.getPath
   }
 
-  private def updateCheckboxList(selectedFile: VirtualFile): CompletableFuture[Iterable[String]] = {
+  private def updateCheckboxList(selectedFile: VirtualFile): Unit= {
     val targetsList = targetsListFetcher(selectedFile)
     if(!targetsList.isDone) {
       myTargetsListPanel.setLoading()
@@ -107,7 +109,7 @@ sealed class FastpassManager(project: Project,
         SwingUtilities.invokeLater { () => {
           if (myFileSystemTree.getSelectedFile == selectedFile) {
             if(error == null) {
-              myTargetsListPanel.setItems(value, mySelectedTargets)
+              myTargetsListPanel.setItems(value.asScala, mySelectedTargets)
               mainPanel.updateUI()
             } else {
               myTargetsListPanel.setItems(List(), Set())

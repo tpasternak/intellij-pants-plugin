@@ -20,8 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class FastpassUtils2 {
-
+public class FastpassUtils {
   public static int runAmend(String basePath, String chosen) throws IOException, InterruptedException, ExecutionException {
     ProcessBuilder builder = new ProcessBuilder("fastpass-amend", basePath + "/.bsp/bloop.json", chosen); // todo 1. tutaj ma być bardziej getlinkedproject 2. musi się wywalić jeżeli projekt pantsowy nie jest w BSP 3. slashe mają być lepsze
     Process process = builder.start();
@@ -31,7 +30,7 @@ public class FastpassUtils2 {
     return exitCode;
   }
 
-  public static void amendAll(String basePath, List<String> newTargets) throws InterruptedException, ExecutionException, IOException {
+  public static void amendAll(String basePath, Collection<String> newTargets) throws InterruptedException, ExecutionException, IOException {
     for (String target : newTargets) {
       runAmend(basePath, target);
     } // todo jako jedna komendan
