@@ -35,13 +35,8 @@ public class FastpassManagerDialog extends DialogWrapper {
     @NotNull Function<VirtualFile, CompletableFuture<Collection<String>>> targetsListFetcher
   ) {
     super(project, false);
-    myProject = project;
-    myDir = dir;
-    myTargets = importedTargets;
-    myRoots = importedPantsRoots;
-    myFetcher = targetsListFetcher;
-    manager = new FastpassChooseTargetsPanel(myProject, myDir, myTargets, myRoots, myFetcher);
-    setTitle(PantsBundle.message("pants.bsp.select.targets")); // todo bundle
+    manager = new FastpassChooseTargetsPanel(project, dir, importedTargets,importedPantsRoots, targetsListFetcher);
+    setTitle(PantsBundle.message("pants.bsp.select.targets")); 
     setOKButtonText(CommonBundle.getOkButtonText());
     init();
 
