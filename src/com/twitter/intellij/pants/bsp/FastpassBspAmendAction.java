@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public class FastpassBspAmendAction extends AnAction {
@@ -32,13 +33,14 @@ public class FastpassBspAmendAction extends AnAction {
     try {
       Project project = event.getProject(); // todo handle null
       Path basePath = Paths.get(project.getBasePath()); // TODO = raczej from getLinkedProjects powinno iść
-      Set<String> targets = FastpassUtils.selectedTargets(basePath);
+      CompletableFuture<Set<String>> targets = FastpassUtils.selectedTargets(basePath);
       List<VirtualFile> importedPantsRoots = FastpassUtils.pantsRoots(project);
       FastpassTargetListCache targetsListCache = new FastpassTargetListCache();
       // todo co jak importedPantsRootsSize ==0?
       // todo handle "all in dir" targets selection (::)
+
       Optional<Set<String>> newTargets = FastpassManager
-        .promptForTargetsToImport(project, importedPantsRoots.get(0), targets, importedPantsRoots,
+        .promptForTargetsToImport(project, importedPantsRoots.get(0), targets.get(), importedPantsRoots,
                                   targetsListCache::getTargetsList
         );
 
