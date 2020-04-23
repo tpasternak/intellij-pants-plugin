@@ -18,14 +18,12 @@ import com.twitter.intellij.pants.PantsBundle;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.BoxLayout;
-import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -45,8 +43,6 @@ class FastpassChooseTargetsPanel extends JPanel {
     myDir = dir;
     myImportedPantsRoots = importedPantsRoots;
     myTargetsListFetcher = targetsListFetcher;
-
-
 
     mainPanel = new JPanel();
     mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
