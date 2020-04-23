@@ -31,24 +31,38 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 
-class FastpassManager extends DialogWrapper {
-  public FastpassManager(
+class FastpassChooseTargetsPanel extends JPanel {
+  public FastpassChooseTargetsPanel(
     @NotNull Project project,
     @NotNull VirtualFile dir,
     @NotNull Collection<String> importedTargets,
     @NotNull Collection<VirtualFile> importedPantsRoots,
     @NotNull Function<VirtualFile, CompletableFuture<Collection<String>>> targetsListFetcher
   ) {
-    super(project, false);
-    setTitle(PantsBundle.message("pants.bsp.select.targets")); // todo bundle
-    setOKButtonText(CommonBundle.getOkButtonText());
     mySelectedTargets = new HashSet<>(importedTargets);
 
     myProject = project;
     myDir = dir;
     myImportedPantsRoots = importedPantsRoots;
     myTargetsListFetcher = targetsListFetcher;
-    init();
+
+
+
+    mainPanel = new JPanel();
+    mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
+    myFileSystemTree = createFileTree();
+    JScrollPane fileSystemTreeScrollPane = ScrollPaneFactory.createScrollPane(myFileSystemTree.getTree());
+    fileSystemTreeScrollPane.setPreferredSize(JBUI.size(400, 500));
+    mainPanel.add(fileSystemTreeScrollPane);
+
+    myTargetsListPanel = new FastpassTargetsCheckboxList(
+      item -> mySelectedTargets.add(item),
+      item -> mySelectedTargets.remove(item)
+    );
+    mainPanel.add(myTargetsListPanel);
+
+    this.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+    this.add(mainPanel);
   }
 
   @NotNull
@@ -77,22 +91,6 @@ class FastpassManager extends DialogWrapper {
     return mySelectedTargets;
   }
 
-  @Override
-  public JComponent createCenterPanel() {
-    mainPanel = new JPanel();
-    mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
-    myFileSystemTree = createFileTree();
-    JScrollPane fileSystemTreeScrollPane = ScrollPaneFactory.createScrollPane(myFileSystemTree.getTree());
-    fileSystemTreeScrollPane.setPreferredSize(JBUI.size(400, 500));
-    mainPanel.add(fileSystemTreeScrollPane);
-
-    myTargetsListPanel = new FastpassTargetsCheckboxList(
-      item -> mySelectedTargets.add(item),
-      item -> mySelectedTargets.remove(item)
-    );
-    mainPanel.add(myTargetsListPanel);
-    return mainPanel;
-  }
 
   private FileSystemTreeImpl createFileTree() {
     FileChooserDescriptor descriptor = new FileChooserDescriptor(true, false,
@@ -143,18 +141,5 @@ class FastpassManager extends DialogWrapper {
                                    }
                                  }
                                }));
-  }
-
-
-  public static Optional<Set<String>> promptForTargetsToImport(
-    Project project,
-    VirtualFile selectedDirectory,
-    Set<String> importedTargets,
-    Collection<VirtualFile> importedPantsRoots,
-    Function<VirtualFile, CompletableFuture<Collection<String>>> fetchTargetsList
-  ) {
-    FastpassManager dial = new FastpassManager(project, selectedDirectory, importedTargets, importedPantsRoots, fetchTargetsList);
-    dial.show();
-    return dial.isOK() ? Optional.of(new HashSet<>(dial.selectedItems())) : Optional.empty();
   }
 }

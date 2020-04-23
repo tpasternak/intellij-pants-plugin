@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -53,13 +54,19 @@ final public class FastpassUtils {
   }
 
   // todo document
-  public static Set<String> selectedTargets(Path basePath) throws IOException, InterruptedException {
-    String[] fastpassCommand = makeFastpassCommand(Arrays.asList("info", basePath.getFileName().toString()));
-    Process process = fastpassProcess(fastpassCommand, basePath.getParent());
-    process.waitFor(); // todo handle cmd line output
-    String stdout = toString(process.getInputStream());
-    String[] list = stdout.equals("") ? new String[]{} : stdout.split("\n");
-    return Stream.of(list).collect(Collectors.toSet());
+  public static CompletableFuture<Set<String>> selectedTargets(Path basePath) throws IOException, InterruptedException {
+    return CompletableFuture.supplyAsync(() -> {
+      try {
+        String[] fastpassCommand = makeFastpassCommand(Arrays.asList("info", basePath.getFileName().toString()));
+        Process process = fastpassProcess(fastpassCommand, basePath.getParent());
+        process.waitFor(); // todo handle cmd line output
+        String stdout = toString(process.getInputStream());
+        String[] list = stdout.equals("") ? new String[]{} : stdout.split("\n");
+        return Stream.of(list).collect(Collectors.toSet());
+    } catch (Throwable e) {
+      throw new CompletionException(e);
+    }
+    });
   }
 
 
