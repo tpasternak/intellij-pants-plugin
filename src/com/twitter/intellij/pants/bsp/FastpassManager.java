@@ -1,7 +1,7 @@
 // Copyright 2020 Pants project contributors (see CONTRIBUTORS.md).
 // Licensed under the Apache License, Version 2.0 (see LICENSE).
 
-package com.twitter.intellij.pants.compiler.actions;
+package com.twitter.intellij.pants.bsp;
 
 
 import com.intellij.CommonBundle;
@@ -14,8 +14,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.ui.treeStructure.Tree;
 import com.intellij.util.ui.JBUI;
+import com.twitter.intellij.pants.PantsBundle;
 import org.jetbrains.annotations.NotNull;
-import scala.runtime.BoxedUnit;
 
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
@@ -40,7 +40,7 @@ class FastpassManager extends DialogWrapper {
     @NotNull Function<VirtualFile, CompletableFuture<Collection<String>>> targetsListFetcher
   ) {
     super(project, false);
-    setTitle("Fastpass Manager"); // todo bundle
+    setTitle(PantsBundle.message("pants.bsp.select.targets")); // todo bundle
     setOKButtonText(CommonBundle.getOkButtonText());
     mySelectedTargets = new HashSet<>(importedTargets);
 
