@@ -23,6 +23,7 @@ import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -60,7 +61,6 @@ public class FastpassManagerDialog extends DialogWrapper {
   @NotNull
   static Logger logger = Logger.getInstance(FastpassManagerDialog.class);
 
-  @NotNull
   FastpassChooseTargetsPanel manager;
 
   @NotNull JPanel mainPanel = new JPanel();
@@ -75,7 +75,9 @@ public class FastpassManagerDialog extends DialogWrapper {
   }
 
   public Collection<String> selectedItems() {
-    return manager.selectedItems();
+    return Optional.ofNullable(manager)
+      .map(FastpassChooseTargetsPanel::selectedItems)
+      .orElse(Collections.emptyList());
   }
 
   public static Optional<Set<String>> promptForTargetsToImport(
