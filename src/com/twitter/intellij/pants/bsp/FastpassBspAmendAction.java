@@ -40,7 +40,7 @@ public class FastpassBspAmendAction extends AnAction {
       // todo handle "all in dir" targets selection (::)
 
       Optional<Set<String>> newTargets = FastpassManagerDialog
-        .promptForTargetsToImport(project, importedPantsRoots.get(0), targets.get(), importedPantsRoots,
+        .promptForTargetsToImport(project, importedPantsRoots.get(0), targets, importedPantsRoots,
                                   targetsListCache::getTargetsList
         );
 

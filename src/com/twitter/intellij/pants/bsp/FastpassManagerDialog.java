@@ -3,6 +3,7 @@
 
 package com.twitter.intellij.pants.bsp;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.ui.DialogWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,6 +12,7 @@ import com.intellij.CommonBundle;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.twitter.intellij.pants.PantsBundle;
+import scala.reflect.internal.Trees;
 
 import javax.swing.JComponent;
 import java.util.Collection;
@@ -36,11 +38,13 @@ public class FastpassManagerDialog extends DialogWrapper {
   ) {
     super(project, false);
     manager = new FastpassChooseTargetsPanel(project, dir, importedTargets,importedPantsRoots, targetsListFetcher);
-    setTitle(PantsBundle.message("pants.bsp.select.targets")); 
+    setTitle(PantsBundle.message("pants.bsp.select.targets"));
     setOKButtonText(CommonBundle.getOkButtonText());
     init();
-
   }
+
+  @NotNull
+  static Logger logger = Logger.getInstance(FastpassManagerDialog.class);
 
   @NotNull
   FastpassChooseTargetsPanel manager;
@@ -58,12 +62,17 @@ public class FastpassManagerDialog extends DialogWrapper {
   public static Optional<Set<String>> promptForTargetsToImport(
     Project project,
     VirtualFile selectedDirectory,
-    Set<String> importedTargets,
+    CompletableFuture<Set<String>> importedTargets,
     Collection<VirtualFile> importedPantsRoots,
     Function<VirtualFile, CompletableFuture<Collection<String>>> fetchTargetsList
   ) {
-    FastpassManagerDialog dial = new FastpassManagerDialog(project, selectedDirectory, importedTargets, importedPantsRoots, fetchTargetsList);
-    dial.show();
-    return dial.isOK() ? Optional.of(new HashSet<>(dial.selectedItems())) : Optional.empty();
+    try {
+      FastpassManagerDialog dial =
+        new FastpassManagerDialog(project, selectedDirectory, importedTargets.get(), importedPantsRoots, fetchTargetsList);
+      dial.show();
+      return dial.isOK() ? Optional.of(new HashSet<>(dial.selectedItems())) : Optional.empty();
+    }catch (Throwable e) {
+      logger.error(e);
+    }
   }
 }
