@@ -43,14 +43,14 @@ final public class FastpassUtils {
   }
 
   // todo document
-  public static void amendAll(@NotNull Path basePath, Collection<String> newTargets) throws InterruptedException, IOException {
+  public static void amendAll(@NotNull PantsBspData importData, Collection<String> newTargets) throws InterruptedException, IOException {
     // todo upewnić się, że amendowanie jest robione do dobrego projektu - może być zaimportowanych wiele BSP
     List<String> amendPart = Arrays.asList(
-      "amend", basePath.getFileName().toString(),
+      "amend", importData.getBspPath().getFileName().toString(),
       "--targets-list", String.join(",", newTargets)
     );
     String[] command = makeFastpassCommand(amendPart);
-    Process process = fastpassProcess(command, basePath.getParent());
+    Process process = fastpassProcess(command, importData.getBspPath().getParent(), Paths.get(importData.getPantsRoot().getPath()));
     process.waitFor();
     if(process.exitValue() != 0) {
       throw new RuntimeException(toString(process.getErrorStream()));
@@ -58,11 +58,11 @@ final public class FastpassUtils {
   }
 
   // todo document
-  public static CompletableFuture<Set<String>> selectedTargets(Path basePath)  {
+  public static CompletableFuture<Set<String>> selectedTargets(PantsBspData basePath)  {
     return CompletableFuture.supplyAsync(() -> {
       try {
-        String[] fastpassCommand = makeFastpassCommand(Arrays.asList("info", basePath.getFileName().toString()));
-        Process process = fastpassProcess(fastpassCommand, basePath.getParent());
+        String[] fastpassCommand = makeFastpassCommand(Arrays.asList("info", basePath.getBspPath().getFileName().toString()));
+        Process process = fastpassProcess(fastpassCommand, basePath.getBspPath().getParent(), Paths.get(basePath.getPantsRoot().getPath()));
         process.waitFor(); // todo handle cmd line output
         String stdout = toString(process.getInputStream());
         String[] list = stdout.equals("") ? new String[]{} : stdout.split("\n");
@@ -85,9 +85,10 @@ final public class FastpassUtils {
   }
 
   @NotNull
-  private static Process fastpassProcess(String[] command, Path fastpassHome) throws IOException {
+  private static Process fastpassProcess(String[] command, Path fastpassHome, Path pantsWorkspace) throws IOException {
     ProcessBuilder builder = new ProcessBuilder(command);
     builder.environment().put("FASTPASS_HOME", fastpassHome.toString());
+    builder.directory(pantsWorkspace.toFile());
     return builder.start();
   }
 

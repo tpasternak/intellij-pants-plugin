@@ -13,7 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -34,9 +34,7 @@ final public class PantsBspData {
     return myPantsRoot;
   }
 
-  public static Collection<PantsBspData> importsFor(Project project) {
-
-
+  public static Set<PantsBspData> importsFor(Project project) {
     return
       Arrays.stream(ModuleManager.getInstance(project).getModules())
         .filter(module ->
@@ -49,5 +47,19 @@ final public class PantsBspData {
           return new PantsBspData(bspRoot, pantsRoots);
         })
         .collect(Collectors.toSet());
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    PantsBspData data = (PantsBspData) o;
+    return Objects.equals(myBspPath, data.myBspPath) &&
+           Objects.equals(myPantsRoot, data.myPantsRoot);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(myBspPath, myPantsRoot);
   }
 }

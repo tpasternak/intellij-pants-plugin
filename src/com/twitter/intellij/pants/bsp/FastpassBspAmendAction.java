@@ -42,7 +42,7 @@ public class FastpassBspAmendAction extends AnAction {
     try {
       Project project = event.getProject(); // todo handle null
 
-      Collection<PantsBspData> linkedProjects = PantsBspData.importsFor(project);
+      Set<PantsBspData> linkedProjects = PantsBspData.importsFor(project);
 
       if(linkedProjects.size() != 1) {
         Messages.showErrorDialog(project,
@@ -56,7 +56,7 @@ public class FastpassBspAmendAction extends AnAction {
       Path bspPath = firstProject.getBspPath();
 
       // [x] TODO = raczej from getLinkedProjects powinno iść
-      CompletableFuture<Set<String>> oldTargets = FastpassUtils.selectedTargets(bspPath);
+      CompletableFuture<Set<String>> oldTargets = FastpassUtils.selectedTargets(firstProject);
 
       FastpassTargetListCache targetsListCache = new FastpassTargetListCache();
 
@@ -66,8 +66,8 @@ public class FastpassBspAmendAction extends AnAction {
         .promptForTargetsToImport(project, firstProject, oldTargets,
                                   targetsListCache::getTargetsList
         );
-
-      amendAndRefreshIfNeeded(project, bspPath, oldTargets, newTargets);
+      // todo freeze here!
+      amendAndRefreshIfNeeded(project, firstProject, oldTargets, newTargets);
     }
     catch (Throwable e) {
       logger.error(e);
@@ -76,7 +76,7 @@ public class FastpassBspAmendAction extends AnAction {
 
   private void amendAndRefreshIfNeeded(
     @NotNull Project project,
-    @NotNull Path basePath,
+    @NotNull PantsBspData basePath,
     @NotNull CompletableFuture<Set<String>> oldTargets,
     @NotNull Optional<Set<String>> newTargets
   ) {
@@ -99,7 +99,7 @@ public class FastpassBspAmendAction extends AnAction {
   private void refreshProjectsWithNewTargetsList(
     Project project,
     Collection<String> newTargets,
-    Path basePath
+    PantsBspData basePath
   ) throws InterruptedException, IOException {
     FastpassUtils.amendAll(basePath, newTargets); // TODO złap błedy // a co jak jest więcej linked projektów?
     ExternalProjectUtil.refresh(project, BSP.ProjectSystemId());
