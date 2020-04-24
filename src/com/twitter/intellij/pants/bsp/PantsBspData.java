@@ -37,7 +37,8 @@ final public class PantsBspData {
     return
       Arrays.stream(ModuleManager.getInstance(project).getModules())
         .filter(module ->
-                  ExternalSystemModulePropertyManager.getInstance(module).getExternalSystemId().equals(BSP.ProjectSystemId().getId()) &&
+                  Objects
+                    .equals(ExternalSystemModulePropertyManager.getInstance(module).getExternalSystemId(), BSP.ProjectSystemId().getId()) &&
                   FastpassUtils.pantsRoots(module).findFirst().isPresent()
         )
         .map(module -> {

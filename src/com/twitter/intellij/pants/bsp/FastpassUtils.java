@@ -38,18 +38,31 @@ final public class FastpassUtils {
   }
 
   // todo document
-  public static void amendAll(@NotNull PantsBspData importData, Collection<String> newTargets) throws InterruptedException, IOException {
+  // todo switch to completable future
+  public static CompletableFuture<Void> amendAll(@NotNull PantsBspData importData, Collection<String> newTargets) {
     // [x] todo upewnić się, że amendowanie jest robione do dobrego projektu - może być zaimportowanych wiele BSP
     List<String> amendPart = Arrays.asList(
       "amend", importData.getBspPath().getFileName().toString(),
       "--targets-list", String.join(",", newTargets)
     );
     String[] command = makeFastpassCommand(amendPart);
-    Process process = fastpassProcess(command, importData.getBspPath().getParent(), Paths.get(importData.getPantsRoot().getPath()));
-    process.waitFor();
-    if(process.exitValue() != 0) {
-      throw new RuntimeException(toString(process.getErrorStream()));
-    }
+    return onExit(importData, command);
+  }
+
+  // replacement of JDK9's CompletableFuture::onExit
+  @NotNull
+  private static CompletableFuture<Void> onExit(@NotNull PantsBspData importData, String[] command) {
+    return CompletableFuture.runAsync(() -> {
+      try {
+        Process process = fastpassProcess(command, importData.getBspPath().getParent(), Paths.get(importData.getPantsRoot().getPath()));
+        process.waitFor();
+        if (process.exitValue() != 0) {
+          throw new RuntimeException(toString(process.getErrorStream()));
+        }
+      } catch (Throwable e) {
+        throw new CompletionException(e);
+      }
+    });
   }
 
   // todo document

@@ -103,12 +103,13 @@ public class FastpassBspAmendAction extends AnAction {
   ) throws InterruptedException, IOException {
     ProgressManager.getInstance().runProcessWithProgressSynchronously(() -> {
       try {
-        FastpassUtils.amendAll(basePath, newTargets); // TODO złap błedy // a co jak jest więcej linked projektów?
-        ExternalProjectUtil.refresh(project, BSP.ProjectSystemId());
+        // [x] TODO złap błedy // a co jak jest więcej linked projektów?
+        FastpassUtils.amendAll(basePath, newTargets).get();
       } catch (Throwable e){
         logger.error(e);
       }
     },"Amending", false, project );
+    ExternalProjectUtil.refresh(project, BSP.ProjectSystemId());
 
   }
 }
