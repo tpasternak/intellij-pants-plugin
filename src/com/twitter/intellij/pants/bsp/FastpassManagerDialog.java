@@ -23,19 +23,19 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class FastpassManagerDialog extends DialogWrapper {
   public FastpassManagerDialog(
     @NotNull Project project,
-    @NotNull VirtualFile dir,
+    @NotNull PantsBspData importData,
     @NotNull CompletableFuture<Set<String>> importedTargets,
-    @NotNull Collection<VirtualFile> importedPantsRoots,
     @NotNull Function<VirtualFile, CompletableFuture<Collection<String>>> targetsListFetcher
   ) {
     super(project, false);
@@ -46,7 +46,7 @@ public class FastpassManagerDialog extends DialogWrapper {
                                SwingUtilities.invokeLater(() -> {
                                    if (error == null) {
                                      mainPanel.removeAll();
-                                     manager = new FastpassChooseTargetsPanel(project, dir, targets,importedPantsRoots, targetsListFetcher);
+                                     manager = new FastpassChooseTargetsPanel(project, importData, targets, targetsListFetcher);
                                      mainPanel.add(manager);
                                      setOKButtonText(CommonBundle.getOkButtonText());
                                      mainPanel.updateUI();
@@ -87,14 +87,13 @@ public class FastpassManagerDialog extends DialogWrapper {
 
   public static Optional<Set<String>> promptForTargetsToImport(
     Project project,
-    VirtualFile selectedDirectory,
+    PantsBspData importData,
     CompletableFuture<Set<String>> importedTargets,
-    Collection<VirtualFile> importedPantsRoots,
     Function<VirtualFile, CompletableFuture<Collection<String>>> fetchTargetsList
   ) {
     try {
       FastpassManagerDialog dial =
-        new FastpassManagerDialog(project, selectedDirectory, importedTargets, importedPantsRoots, fetchTargetsList);
+        new FastpassManagerDialog(project, importData, importedTargets, fetchTargetsList);
       dial.show();
       return dial.isOK() ? dial.selectedItems().map(HashSet::new) : Optional.empty();
     }catch (Throwable e) {

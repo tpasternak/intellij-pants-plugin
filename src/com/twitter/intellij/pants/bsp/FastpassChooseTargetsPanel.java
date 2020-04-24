@@ -32,16 +32,14 @@ import java.util.function.Function;
 class FastpassChooseTargetsPanel extends JPanel {
   public FastpassChooseTargetsPanel(
     @NotNull Project project,
-    @NotNull VirtualFile dir,
+    @NotNull PantsBspData importData,
     @NotNull Collection<String> importedTargets,
-    @NotNull Collection<VirtualFile> importedPantsRoots,
     @NotNull Function<VirtualFile, CompletableFuture<Collection<String>>> targetsListFetcher
   ) {
+    myImportData = importData;
     mySelectedTargets = new HashSet<>(importedTargets);
 
     myProject = project;
-    myDir = dir;
-    myImportedPantsRoots = importedPantsRoots;
     myTargetsListFetcher = targetsListFetcher;
 
     mainPanel = new JPanel();
@@ -65,13 +63,10 @@ class FastpassChooseTargetsPanel extends JPanel {
   Project myProject;
 
   @NotNull
-  VirtualFile myDir;
-
-  @NotNull
-  Collection<VirtualFile> myImportedPantsRoots;
-
-  @NotNull
   Function<VirtualFile, CompletableFuture<Collection<String>>> myTargetsListFetcher;
+
+  @NotNull
+  private PantsBspData myImportData;
 
   @NotNull
   Set<String> mySelectedTargets;
@@ -94,8 +89,8 @@ class FastpassChooseTargetsPanel extends JPanel {
                                                                  false, false
     );
     FileSystemTreeImpl fileSystemTree = new FileSystemTreeImpl(myProject, descriptor, new Tree(), null, null, null);
-    fileSystemTree.select(myDir, null);
-    fileSystemTree.expand(myDir, null);
+    fileSystemTree.select(myImportData.getPantsRoot(), null);
+    fileSystemTree.expand(myImportData.getPantsRoot(), null);
     fileSystemTree.showHiddens(true);
     fileSystemTree.updateTree();
     fileSystemTree.getTree().getSelectionModel().addTreeSelectionListener(event -> handleTreeSelection(fileSystemTree));
@@ -104,8 +99,7 @@ class FastpassChooseTargetsPanel extends JPanel {
 
   private void handleTreeSelection(FileSystemTreeImpl myFileSystemTree) {
     VirtualFile selectedFile = myFileSystemTree.getSelectedFile();
-    if (selectedFile != null &&
-        myImportedPantsRoots.stream().anyMatch(root -> belongsToImportedPantsProject(selectedFile, root))
+    if (selectedFile != null && belongsToImportedPantsProject(selectedFile, myImportData.getPantsRoot())
     ) {
       updateCheckboxList(selectedFile);
     }

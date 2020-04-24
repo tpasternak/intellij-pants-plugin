@@ -3,6 +3,7 @@
 
 package com.twitter.intellij.pants.bsp;
 
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
@@ -30,17 +31,20 @@ final public class FastpassUtils {
   // todo document
   public static List<VirtualFile> pantsRoots(@NotNull Project project)  {
     return  Stream.of(ModuleManager.getInstance(project).getModules()).flatMap (
-      module ->
-        Stream.of(ModuleRootManager.getInstance(module).getSourceRoots()).flatMap (
-          sourceRoot -> toStream(PantsUtil.findPantsExecutable(sourceRoot.getPath()).map(VirtualFile::getParent))
-        )
+      module ->pantsRoots(module)
     ).collect(Collectors.toList());
+  }
+
+  @NotNull
+  public static Stream<VirtualFile> pantsRoots(Module module) {
+    return Stream.of(ModuleRootManager.getInstance(module).getSourceRoots()).flatMap (
+      sourceRoot -> toStream(PantsUtil.findPantsExecutable(sourceRoot.getPath()).map(VirtualFile::getParent))
+    );
   }
 
   // todo document
   public static void amendAll(@NotNull Path basePath, Collection<String> newTargets) throws InterruptedException, IOException {
     // todo upewnić się, że amendowanie jest robione do dobrego projektu - może być zaimportowanych wiele BSP
-
     List<String> amendPart = Arrays.asList(
       "amend", basePath.getFileName().toString(),
       "--targets-list", String.join(",", newTargets)
@@ -54,10 +58,9 @@ final public class FastpassUtils {
   }
 
   // todo document
-  public static CompletableFuture<Set<String>> selectedTargets(Path basePath) throws IOException, InterruptedException {
+  public static CompletableFuture<Set<String>> selectedTargets(Path basePath)  {
     return CompletableFuture.supplyAsync(() -> {
       try {
-
         String[] fastpassCommand = makeFastpassCommand(Arrays.asList("info", basePath.getFileName().toString()));
         Process process = fastpassProcess(fastpassCommand, basePath.getParent());
         process.waitFor(); // todo handle cmd line output
