@@ -57,6 +57,7 @@ final public class FastpassUtils {
   public static CompletableFuture<Set<String>> selectedTargets(Path basePath) throws IOException, InterruptedException {
     return CompletableFuture.supplyAsync(() -> {
       try {
+
         String[] fastpassCommand = makeFastpassCommand(Arrays.asList("info", basePath.getFileName().toString()));
         Process process = fastpassProcess(fastpassCommand, basePath.getParent());
         process.waitFor(); // todo handle cmd line output

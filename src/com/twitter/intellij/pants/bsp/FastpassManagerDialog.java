@@ -5,6 +5,7 @@ package com.twitter.intellij.pants.bsp;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.util.PlatformIcons;
 import com.intellij.util.ui.AsyncProcessIcon;
 import com.intellij.util.ui.JBUI;
 import org.jetbrains.annotations.NotNull;
@@ -14,14 +15,13 @@ import com.intellij.CommonBundle;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.twitter.intellij.pants.PantsBundle;
-import scala.reflect.internal.Trees;
 
-import javax.swing.BoxLayout;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -40,18 +40,24 @@ public class FastpassManagerDialog extends DialogWrapper {
   ) {
     super(project, false);
     setTitle(PantsBundle.message("pants.bsp.select.targets"));
-    setOKButtonText(CommonBundle.getOkButtonText());
     init();
 
     importedTargets.whenComplete((targets, error) ->
                                SwingUtilities.invokeLater(() -> {
                                    if (error == null) {
-                                     mainPanel.remove(0);
+                                     mainPanel.removeAll();
                                      manager = new FastpassChooseTargetsPanel(project, dir, targets,importedPantsRoots, targetsListFetcher);
                                      mainPanel.add(manager);
+                                     setOKButtonText(CommonBundle.getOkButtonText());
                                      mainPanel.updateUI();
                                    }
                                    else {
+                                     mainPanel.removeAll();
+                                     mainPanel.add(new JLabel(PantsBundle.message("pants.bsp.error.failed.to.fetch.targets"),
+                                                              PlatformIcons.ERROR_INTRODUCTION_ICON,
+                                                              SwingConstants.CENTER
+                                     ));
+                                     logger.error(error);
                                      mainPanel.updateUI();
                                    }
                                }));
@@ -74,10 +80,9 @@ public class FastpassManagerDialog extends DialogWrapper {
     return mainPanel;
   }
 
-  public Collection<String> selectedItems() {
+  public Optional<Collection<String>> selectedItems() {
     return Optional.ofNullable(manager)
-      .map(FastpassChooseTargetsPanel::selectedItems)
-      .orElse(Collections.emptyList());
+      .map(FastpassChooseTargetsPanel::selectedItems);
   }
 
   public static Optional<Set<String>> promptForTargetsToImport(
@@ -91,7 +96,7 @@ public class FastpassManagerDialog extends DialogWrapper {
       FastpassManagerDialog dial =
         new FastpassManagerDialog(project, selectedDirectory, importedTargets, importedPantsRoots, fetchTargetsList);
       dial.show();
-      return dial.isOK() ? Optional.of(new HashSet<>(dial.selectedItems())) : Optional.empty();
+      return dial.isOK() ? dial.selectedItems().map(HashSet::new) : Optional.empty();
     }catch (Throwable e) {
       logger.error(e);
       return Optional.empty();

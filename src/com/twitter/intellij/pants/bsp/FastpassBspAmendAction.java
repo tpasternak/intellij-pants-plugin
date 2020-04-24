@@ -28,7 +28,7 @@ public class FastpassBspAmendAction extends AnAction {
 
   @Override
   public void actionPerformed(@NotNull AnActionEvent event) {
-    // todo: don't freeze UI at the beginning
+    // [x] todo: don't freeze UI at the beginning
     // todo: block for non-bsp project
     try {
       Project project = event.getProject(); // todo handle null
