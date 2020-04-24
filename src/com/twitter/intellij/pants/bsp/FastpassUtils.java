@@ -44,7 +44,7 @@ final public class FastpassUtils {
 
   // todo document
   public static void amendAll(@NotNull PantsBspData importData, Collection<String> newTargets) throws InterruptedException, IOException {
-    // todo upewnić się, że amendowanie jest robione do dobrego projektu - może być zaimportowanych wiele BSP
+    // [x] todo upewnić się, że amendowanie jest robione do dobrego projektu - może być zaimportowanych wiele BSP
     List<String> amendPart = Arrays.asList(
       "amend", importData.getBspPath().getFileName().toString(),
       "--targets-list", String.join(",", newTargets)
