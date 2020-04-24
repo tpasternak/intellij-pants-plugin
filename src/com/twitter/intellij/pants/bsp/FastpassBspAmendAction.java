@@ -28,25 +28,33 @@ public class FastpassBspAmendAction extends AnAction {
     // [x] todo: don't freeze UI at the beginning
     // [x] todo: block for non-bsp project
     try {
-      Project project = event.getProject(); // todo handle null
-
-      Set<PantsBspData> linkedProjects = PantsBspData.importsFor(project);
-
-      if(linkedProjects.size() > 1) {
-        Messages.showErrorDialog(
-          PantsBundle.message("pants.bsp.error.failed.more.than.one.bsp.project.not.supported.message"),
-          PantsBundle.message("pants.bsp.error.action.not.supported"));
-
-      } else if (linkedProjects.size() < 1) {
-        Messages.showErrorDialog(
-          PantsBundle.message("pants.bsp.error.failed.not.a.bsp.pants.project.message"),
-          PantsBundle.message("pants.bsp.error.action.not.supported"));
-      } else {
-        PantsBspData importData = linkedProjects.stream().findFirst().get();
-        startAmendProcedure(project, importData);
+      Project project = event.getProject(); // [x] todo handle null
+      if (project != null) {
+        Set<PantsBspData> linkedProjects = PantsBspData.importsFor(project);
+        if (linkedProjects.size() > 1) {
+          Messages.showErrorDialog(
+            PantsBundle.message("pants.bsp.error.failed.more.than.one.bsp.project.not.supported.message"),
+            PantsBundle.message("pants.bsp.error.action.not.supported.title")
+          );
+        }
+        else if (linkedProjects.size() < 1) {
+          Messages.showErrorDialog(
+            PantsBundle.message("pants.bsp.error.failed.not.a.bsp.pants.project.message"),
+            PantsBundle.message("pants.bsp.error.action.not.supported.title")
+          );
+        }
+        else {
+          PantsBspData importData = linkedProjects.stream().findFirst().get();
+          startAmendProcedure(project, importData);
+        }
       }
-    }
-    catch (Throwable e) {
+      else {
+        Messages.showErrorDialog(
+          PantsBundle.message("pants.bsp.error.no.project.found"),
+          PantsBundle.message("pants.bsp.error.action.not.supported.title")
+        );
+      }
+    } catch (Throwable e) {
       logger.error(e);
     }
   }
