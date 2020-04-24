@@ -6,6 +6,7 @@ package com.twitter.intellij.pants.bsp;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.twitter.intellij.pants.PantsBundle;
@@ -71,7 +72,7 @@ public class FastpassBspAmendAction extends AnAction {
       .promptForTargetsToImport(project, firstProject, oldTargets,
                                 targetsListCache::getTargetsList
       );
-    // todo freeze here!
+    // [x] todo freeze here!
     amendAndRefreshIfNeeded(project, firstProject, oldTargets, newTargets);
   }
 
@@ -82,27 +83,32 @@ public class FastpassBspAmendAction extends AnAction {
     @NotNull Optional<Set<String>> newTargets
   ) {
     oldTargets.thenAccept(
-      oldTargetsVal -> {
-        newTargets.ifPresent(newTargetsVal -> {
-          if (!newTargets.get().equals(oldTargetsVal)) {
-            try {
-              refreshProjectsWithNewTargetsList(project, newTargets.get(), basePath);
-            }
-            catch (Throwable e) {
-              logger.error(e);
-            }
+      oldTargetsVal -> newTargets.ifPresent(newTargetsVal -> {
+        if (!newTargets.get().equals(oldTargetsVal)) {
+          try {
+            refreshProjectsWithNewTargetsList(project, newTargets.get(), basePath);
           }
-        });
-      }
+          catch (Throwable e) {
+            logger.error(e);
+          }
+        }
+      })
     );
   }
 
   private void refreshProjectsWithNewTargetsList(
-    Project project,
+    @NotNull Project project,
     Collection<String> newTargets,
     PantsBspData basePath
   ) throws InterruptedException, IOException {
-    FastpassUtils.amendAll(basePath, newTargets); // TODO złap błedy // a co jak jest więcej linked projektów?
-    ExternalProjectUtil.refresh(project, BSP.ProjectSystemId());
+    ProgressManager.getInstance().runProcessWithProgressSynchronously(() -> {
+      try {
+        FastpassUtils.amendAll(basePath, newTargets); // TODO złap błedy // a co jak jest więcej linked projektów?
+        ExternalProjectUtil.refresh(project, BSP.ProjectSystemId());
+      } catch (Throwable e){
+        logger.error(e);
+      }
+    },"Amending", false, project );
+
   }
 }
