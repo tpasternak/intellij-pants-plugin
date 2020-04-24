@@ -33,32 +33,51 @@ public class FastpassBspAmendAction extends AnAction {
     try {
       Project project = event.getProject(); // todo handle null
       Path basePath = Paths.get(project.getBasePath()); // TODO = raczej from getLinkedProjects powinno iść
-      CompletableFuture<Set<String>> targets = FastpassUtils.selectedTargets(basePath);
+      CompletableFuture<Set<String>> oldTargets = FastpassUtils.selectedTargets(basePath);
       List<VirtualFile> importedPantsRoots = FastpassUtils.pantsRoots(project);
       FastpassTargetListCache targetsListCache = new FastpassTargetListCache();
       // todo co jak importedPantsRootsSize ==0?
       // todo handle "all in dir" targets selection (::)
 
       Optional<Set<String>> newTargets = FastpassManagerDialog
-        .promptForTargetsToImport(project, importedPantsRoots.get(0), targets, importedPantsRoots,
+        .promptForTargetsToImport(project, importedPantsRoots.get(0), oldTargets, importedPantsRoots,
                                   targetsListCache::getTargetsList
         );
 
-      if (newTargets.isPresent() && !newTargets.get().equals(targets)) {
-          refreshProjectsWithNewTargetsList(project, newTargets.get(), basePath);
-      }
+      amendAndRefreshIfNeeded(project, basePath, oldTargets, newTargets);
     }
     catch (Throwable e) {
       logger.error(e);
     }
   }
 
+  private void amendAndRefreshIfNeeded(
+    @NotNull Project project,
+    @NotNull Path basePath,
+    @NotNull CompletableFuture<Set<String>> oldTargets,
+    @NotNull Optional<Set<String>> newTargets
+  ) {
+    oldTargets.thenAccept(
+      oldTargetsVal -> {
+        newTargets.ifPresent(newTargetsVal -> {
+          if (!newTargets.get().equals(oldTargetsVal)) {
+            try {
+              refreshProjectsWithNewTargetsList(project, newTargets.get(), basePath);
+            }
+            catch (Throwable e) {
+              logger.error(e);
+            }
+          }
+        });
+      }
+    );
+  }
 
   private void refreshProjectsWithNewTargetsList(
     Project project,
     Collection<String> newTargets,
     Path basePath
-  ) throws InterruptedException, ExecutionException, IOException {
+  ) throws InterruptedException, IOException {
     FastpassUtils.amendAll(basePath, newTargets); // TODO złap błedy // a co jak jest więcej linked projektów?
     ExternalProjectUtil.refresh(project, BSP.ProjectSystemId());
   }
