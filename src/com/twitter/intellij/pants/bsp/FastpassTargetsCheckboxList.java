@@ -16,6 +16,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -71,5 +72,9 @@ class FastpassTargetsCheckboxList extends JComponent {
 
   public void setLoading() {
     updateTargetsListWithMessage(new AsyncProcessIcon(""));
+  }
+
+  public void clear() {
+    setItems(Collections.emptyList(), Collections.emptySet());
   }
 }

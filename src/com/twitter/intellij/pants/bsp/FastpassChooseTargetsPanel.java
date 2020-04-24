@@ -102,6 +102,8 @@ class FastpassChooseTargetsPanel extends JPanel {
     if (selectedFile != null && belongsToImportedPantsProject(selectedFile, myImportData.getPantsRoot())
     ) {
       updateCheckboxList(selectedFile);
+    } else {
+      myTargetsListPanel.clear();
     }
   }
 
@@ -118,15 +120,15 @@ class FastpassChooseTargetsPanel extends JPanel {
       myTargetsListPanel.setLoading();
       mainPanel.updateUI();
     }
-    targetsList.whenComplete((value, error) ->
+    targetsList.whenComplete((targetsInDir, error) ->
                                SwingUtilities.invokeLater(() -> {
                                  if (myFileSystemTree.getSelectedFile().equals(selectedFile)) {
                                    if (error == null) {
-                                     myTargetsListPanel.setItems(value, mySelectedTargets);
+                                     myTargetsListPanel.setItems(targetsInDir, mySelectedTargets);
                                      mainPanel.updateUI();
                                    }
                                    else {
-                                     myTargetsListPanel.setItems(Collections.emptyList(), Collections.emptySet());
+                                     myTargetsListPanel.clear();
                                      mainPanel.updateUI();
                                    }
                                  }
