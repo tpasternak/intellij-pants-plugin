@@ -28,13 +28,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 final public class FastpassUtils {
-  // todo document
-  public static List<VirtualFile> pantsRoots(@NotNull Project project)  {
-    return  Stream.of(ModuleManager.getInstance(project).getModules()).flatMap (
-      module ->pantsRoots(module)
-    ).collect(Collectors.toList());
-  }
 
+  //todo document
   @NotNull
   public static Stream<VirtualFile> pantsRoots(Module module) {
     return Stream.of(ModuleRootManager.getInstance(module).getSourceRoots()).flatMap (
