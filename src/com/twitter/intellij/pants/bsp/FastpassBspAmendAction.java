@@ -10,6 +10,7 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.twitter.intellij.pants.PantsBundle;
+import com.twitter.intellij.pants.bsp.ui.FastpassManagerDialog;
 import com.twitter.intellij.pants.util.ExternalProjectUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.bsp.BSP;

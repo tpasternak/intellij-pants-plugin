@@ -1,13 +1,14 @@
 // Copyright 2020 Pants project contributors (see CONTRIBUTORS.md).
 // Licensed under the Apache License, Version 2.0 (see LICENSE).
 
-package com.twitter.intellij.pants.bsp;
+package com.twitter.intellij.pants.bsp.ui;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.util.PlatformIcons;
 import com.intellij.util.ui.AsyncProcessIcon;
 import com.intellij.util.ui.JBUI;
+import com.twitter.intellij.pants.bsp.PantsBspData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

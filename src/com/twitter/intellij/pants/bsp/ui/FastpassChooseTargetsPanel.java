@@ -1,7 +1,7 @@
 // Copyright 2020 Pants project contributors (see CONTRIBUTORS.md).
 // Licensed under the Apache License, Version 2.0 (see LICENSE).
 
-package com.twitter.intellij.pants.bsp;
+package com.twitter.intellij.pants.bsp.ui;
 
 
 import com.intellij.history.core.Paths;
@@ -12,6 +12,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.ui.treeStructure.Tree;
 import com.intellij.util.ui.JBUI;
+import com.twitter.intellij.pants.bsp.PantsBspData;
+import com.twitter.intellij.pants.bsp.ui.FastpassTargetsCheckboxList;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.BoxLayout;
