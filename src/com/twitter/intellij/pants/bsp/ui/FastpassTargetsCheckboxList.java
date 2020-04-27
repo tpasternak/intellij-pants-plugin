@@ -7,13 +7,16 @@ package com.twitter.intellij.pants.bsp.ui;
 import com.intellij.ui.CheckBoxList;
 import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.util.ui.AsyncProcessIcon;
+import com.intellij.util.ui.CheckBox;
 import com.intellij.util.ui.JBUI;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.BoxLayout;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import java.awt.Checkbox;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,8 +32,14 @@ class FastpassTargetsCheckboxList extends JComponent {
       String item = checkboxPanel.getItemAt(index);
       if (value) onSelection.accept(item); else onDeselection.accept(item);
     });
-    mainPanel.add(myScrollPaneCheckbox);
+//    mainPanel.add(myScrollPaneCheckbox);
+
+    JCheckBox c = new JCheckBox("all in dir (:)");
+
+    mainPanel.add(c);
+
     this.add(mainPanel);
+//    CheckBox aggregateAddressesCheckboxList = new CheckBox("all in dir :", mainPanel, "prop");
   }
 
   private JPanel createMainPanel() {
@@ -49,8 +58,6 @@ class FastpassTargetsCheckboxList extends JComponent {
   JScrollPane myScrollPaneCheckbox = ScrollPaneFactory.createScrollPane(checkboxPanel);
 
 
-
-
   private void updateCheckboxList(Collection<String> targets, Set<String> selected) {
     checkboxPanel.setItems(new ArrayList<>(targets), x -> x);
     for (String target : targets) {
@@ -59,14 +66,19 @@ class FastpassTargetsCheckboxList extends JComponent {
   }
 
   private void updateTargetsListWithMessage(JComponent icon){
-    mainPanel.remove(0);
+    mainPanel.removeAll();
     mainPanel.add(icon);
   }
 
   public void  setItems(Collection<String> value, Set<String> selected) {
-    mainPanel.remove(0);
+    mainPanel.removeAll();
     mainPanel.add(myScrollPaneCheckbox);
     updateCheckboxList(value, selected);
+
+    JCheckBox c = new JCheckBox("all in dir (:)");
+    JCheckBox d = new JCheckBox("recursive all in dir (::)");
+    mainPanel.add(c);
+    mainPanel.add(d);
   }
 
   public void setLoading() {
