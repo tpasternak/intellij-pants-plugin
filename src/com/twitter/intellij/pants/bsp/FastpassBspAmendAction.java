@@ -11,6 +11,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.twitter.intellij.pants.PantsBundle;
 import com.twitter.intellij.pants.bsp.ui.FastpassManagerDialog;
+import com.twitter.intellij.pants.bsp.ui.PantsTargetAddress;
 import com.twitter.intellij.pants.util.ExternalProjectUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.bsp.BSP;
@@ -20,6 +21,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class FastpassBspAmendAction extends AnAction {
 
@@ -63,13 +65,13 @@ public class FastpassBspAmendAction extends AnAction {
 
   private void startAmendProcedure(Project project, PantsBspData firstProject) {
     // [x] TODO = raczej from getLinkedProjects powinno iść
-    CompletableFuture<Set<String>> oldTargets = FastpassUtils.selectedTargets(firstProject);
+    CompletableFuture<Set<PantsTargetAddress>> oldTargets = FastpassUtils.selectedTargets(firstProject);
 
     FastpassTargetListCache targetsListCache = new FastpassTargetListCache();
 
     // [x] todo co jak importedPantsRootsSize ==0?
     // todo handle "all in dir" targets selection (::)
-    Optional<Set<String>> newTargets = FastpassManagerDialog
+    Optional<Set<PantsTargetAddress>> newTargets = FastpassManagerDialog
       .promptForTargetsToImport(project, firstProject, oldTargets,
                                 targetsListCache::getTargetsList
       );
@@ -80,8 +82,8 @@ public class FastpassBspAmendAction extends AnAction {
   private void amendAndRefreshIfNeeded(
     @NotNull Project project,
     @NotNull PantsBspData basePath,
-    @NotNull CompletableFuture<Set<String>> oldTargets,
-    @NotNull Optional<Set<String>> newTargets
+    @NotNull CompletableFuture<Set<PantsTargetAddress>> oldTargets,
+    @NotNull Optional<Set<PantsTargetAddress>> newTargets
   ) {
     oldTargets.thenAccept(
       oldTargetsVal -> newTargets.ifPresent(newTargetsVal -> {
@@ -99,13 +101,13 @@ public class FastpassBspAmendAction extends AnAction {
 
   private void refreshProjectsWithNewTargetsList(
     @NotNull Project project,
-    Collection<String> newTargets,
+    Collection<PantsTargetAddress> newTargets,
     PantsBspData basePath
   ) throws InterruptedException, IOException {
     ProgressManager.getInstance().runProcessWithProgressSynchronously(() -> {
       try {
         // [x] TODO złap błedy // a co jak jest więcej linked projektów?
-        FastpassUtils.amendAll(basePath, newTargets).get();
+        FastpassUtils.amendAll(basePath, newTargets.stream().map(x -> x.toAddressString()).collect(Collectors.toList())).get();
       } catch (Throwable e){
         logger.error(e);
       }

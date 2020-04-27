@@ -3,6 +3,7 @@
 
 package com.twitter.intellij.pants.bsp.ui;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -29,15 +30,24 @@ public class PantsTargetAddress {
     myTargets = targets;
   }
 
-  public static List<PantsTargetAddress> fromString(String s) {
+  public String toAddressString() {
+    switch (myKind)  {
+      case SINGLE_TARGETS: return myPath + ":" + myTargets.get();
+      case ALL_TARGETS_FLAT: return myPath + ":";
+      case ALL_TARGETS_RECURSIVE: return myPath + "::";
+    }
+    throw new RuntimeException("Very bad"); //todo better
+  }
+
+  public static PantsTargetAddress fromString(String s) {
     String[] strings = s.split(":");
 
     if (strings.length == 2) {
-      return Arrays.asList(new PantsTargetAddress(strings[0], SelectionKind.SINGLE_TARGETS, Optional.of(strings[1])));
+      return new PantsTargetAddress(strings[0], SelectionKind.SINGLE_TARGETS, Optional.of(strings[1]));
     } else if (s.endsWith("::")) {
-      return Arrays.asList(new PantsTargetAddress(strings[0], SelectionKind.ALL_TARGETS_RECURSIVE, Optional.empty()));
+      return new PantsTargetAddress(strings[0], SelectionKind.ALL_TARGETS_RECURSIVE, Optional.empty());
     } else if (s.endsWith(":")) {
-      return Arrays.asList(new PantsTargetAddress(strings[0], SelectionKind.ALL_TARGETS_FLAT, Optional.empty()));
+      return new PantsTargetAddress(strings[0], SelectionKind.ALL_TARGETS_FLAT, Optional.empty());
     } else {
       throw new RuntimeException("");//todo better
     }

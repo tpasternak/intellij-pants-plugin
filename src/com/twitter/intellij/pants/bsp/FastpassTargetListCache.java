@@ -5,6 +5,7 @@ package com.twitter.intellij.pants.bsp;
 
 
 import com.intellij.openapi.vfs.VirtualFile;
+import com.twitter.intellij.pants.bsp.ui.PantsTargetAddress;
 
 import java.util.Collection;
 
@@ -13,11 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 final class FastpassTargetListCache {
 
-  ConcurrentHashMap<VirtualFile, CompletableFuture<Collection<String>>> cache = new ConcurrentHashMap<>();
+  ConcurrentHashMap<VirtualFile, CompletableFuture<Collection<PantsTargetAddress>>> cache = new ConcurrentHashMap<>();
 
   // todo z jakiegoś cholernego powodu pada import `res:`
   // [x] todo coś w rodzaju putifabsent
-  CompletableFuture<Collection<String>>  getTargetsList(VirtualFile file) {
+  CompletableFuture<Collection<PantsTargetAddress>>  getTargetsList(VirtualFile file) {
     return cache.computeIfAbsent(file, FastpassUtils::availableTargetsIn);
   }
 }

@@ -8,6 +8,7 @@ import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.twitter.intellij.pants.bsp.ui.PantsTargetAddress;
 import com.twitter.intellij.pants.util.PantsUtil;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
@@ -66,7 +67,7 @@ final public class FastpassUtils {
   }
 
   // todo document
-  public static CompletableFuture<Set<String>> selectedTargets(PantsBspData basePath)  {
+  public static CompletableFuture<Set<PantsTargetAddress>> selectedTargets(PantsBspData basePath)  {
     return CompletableFuture.supplyAsync(() -> {
       try {
         String[] fastpassCommand = makeFastpassCommand(Arrays.asList("info", basePath.getBspPath().getFileName().toString()));
@@ -74,7 +75,7 @@ final public class FastpassUtils {
         process.waitFor(); // todo handle cmd line output
         String stdout = toString(process.getInputStream());
         String[] list = stdout.equals("") ? new String[]{} : stdout.split("\n");
-        return Stream.of(list).collect(Collectors.toSet());
+        return Stream.of(list).map(PantsTargetAddress::fromString).collect(Collectors.toSet());
     } catch (Throwable e) {
       throw new CompletionException(e);
     }
@@ -115,11 +116,12 @@ final public class FastpassUtils {
   }
 
   // todo document
-  public static CompletableFuture<Collection<String>> availableTargetsIn(VirtualFile file) {
+  public static CompletableFuture<Collection<PantsTargetAddress>> availableTargetsIn(VirtualFile file) {
     return CompletableFuture.supplyAsync(
       () ->
         // todo użyj stałej zamiast BUILD
         PantsUtil.listAllTargets( (file.isDirectory())?  Paths.get(file.getPath(), "BUILD").toString() : file.getPath())
+          .stream().map(PantsTargetAddress::fromString).collect(Collectors.toList())
       );
   }
 }

@@ -32,8 +32,8 @@ class FastpassChooseTargetsPanel extends JPanel {
   public FastpassChooseTargetsPanel(
     @NotNull Project project,
     @NotNull PantsBspData importData,
-    @NotNull Collection<String> importedTargets,
-    @NotNull Function<VirtualFile, CompletableFuture<Collection<String>>> targetsListFetcher
+    @NotNull Collection<PantsTargetAddress> importedTargets,
+    @NotNull Function<VirtualFile, CompletableFuture<Collection<PantsTargetAddress>>> targetsListFetcher
   ) {
     myImportData = importData;
     mySelectedTargets = new HashSet<>(importedTargets);
@@ -62,13 +62,13 @@ class FastpassChooseTargetsPanel extends JPanel {
   Project myProject;
 
   @NotNull
-  Function<VirtualFile, CompletableFuture<Collection<String>>> myTargetsListFetcher;
+  Function<VirtualFile, CompletableFuture<Collection<PantsTargetAddress>>> myTargetsListFetcher;
 
   @NotNull
   private PantsBspData myImportData;
 
   @NotNull
-  Set<String> mySelectedTargets;
+  Set<PantsTargetAddress> mySelectedTargets;
 
   JPanel mainPanel = null;
 
@@ -77,7 +77,7 @@ class FastpassChooseTargetsPanel extends JPanel {
   FastpassTargetsCheckboxList myTargetsListPanel = null;
 
   @NotNull
-  public Collection<String> selectedItems() {
+  public Collection<PantsTargetAddress> selectedItems() {
     return mySelectedTargets;
   }
 
@@ -114,7 +114,7 @@ class FastpassChooseTargetsPanel extends JPanel {
   }
 
   private void updateCheckboxList(VirtualFile selectedFile) {
-    CompletableFuture<Collection<String>> targetsList = myTargetsListFetcher.apply(selectedFile);
+    CompletableFuture<Collection<PantsTargetAddress>> targetsList = myTargetsListFetcher.apply(selectedFile);
     if (!targetsList.isDone()) {
       myTargetsListPanel.setLoading();
       mainPanel.updateUI();

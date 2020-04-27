@@ -34,8 +34,8 @@ public class FastpassManagerDialog extends DialogWrapper {
   public FastpassManagerDialog(
     @NotNull Project project,
     @NotNull PantsBspData importData,
-    @NotNull CompletableFuture<Set<String>> importedTargets,
-    @NotNull Function<VirtualFile, CompletableFuture<Collection<String>>> targetsListFetcher
+    @NotNull CompletableFuture<Set<PantsTargetAddress>> importedTargets,
+    @NotNull Function<VirtualFile, CompletableFuture<Collection<PantsTargetAddress>>> targetsListFetcher
   ) {
     super(project, false);
     setTitle(PantsBundle.message("pants.bsp.select.targets"));
@@ -79,16 +79,16 @@ public class FastpassManagerDialog extends DialogWrapper {
     return mainPanel;
   }
 
-  public Optional<Collection<String>> selectedItems() {
+  public Optional<Collection<PantsTargetAddress>> selectedItems() {
     return Optional.ofNullable(manager)
       .map(FastpassChooseTargetsPanel::selectedItems);
   }
 
-  public static Optional<Set<String>> promptForTargetsToImport(
+  public static Optional<Set<PantsTargetAddress>> promptForTargetsToImport(
     Project project,
     PantsBspData importData,
-    CompletableFuture<Set<String>> importedTargets,
-    Function<VirtualFile, CompletableFuture<Collection<String>>> fetchTargetsList
+    CompletableFuture<Set<PantsTargetAddress>> importedTargets,
+    Function<VirtualFile, CompletableFuture<Collection<PantsTargetAddress>>> fetchTargetsList
   ) {
     try {
       FastpassManagerDialog dial =

@@ -12,20 +12,18 @@ import java.util.Optional;
 
 public class PantsTargetAddressTest extends UsefulTestCase {
   public void testDirectEntry() {
-    List<PantsTargetAddress> t = PantsTargetAddress.fromString("project:target");
-    assertEquals(t.size(), 1);
-    assertEquals(t.get(0), new PantsTargetAddress("project", PantsTargetAddress.SelectionKind.SINGLE_TARGETS, Optional.of("target")));
+    PantsTargetAddress t = PantsTargetAddress.fromString("project:target");
+    assertEquals(t, new PantsTargetAddress("project", PantsTargetAddress.SelectionKind.SINGLE_TARGETS, Optional.of("target")));
   }
 
   public void testRecursiveEntry() {
-    List<PantsTargetAddress> t = PantsTargetAddress.fromString("project::");
-    assertEquals(t.size(), 1);
-    assertEquals(t.get(0), new PantsTargetAddress("project", PantsTargetAddress.SelectionKind.ALL_TARGETS_RECURSIVE, Optional.empty()));
+    PantsTargetAddress t = PantsTargetAddress.fromString("project::");
+    assertEquals(t, new PantsTargetAddress("project", PantsTargetAddress.SelectionKind.ALL_TARGETS_RECURSIVE, Optional.empty()));
   }
 
   public void testFlatEntry() {
-    List<PantsTargetAddress> t = PantsTargetAddress.fromString("project:");
-    assertEquals(t.size(), 1);
-    assertEquals(t.get(0), new PantsTargetAddress("project", PantsTargetAddress.SelectionKind.ALL_TARGETS_FLAT, Optional.empty()));
+    PantsTargetAddress t = PantsTargetAddress.fromString("project:");
+
+    assertEquals(t, new PantsTargetAddress("project", PantsTargetAddress.SelectionKind.ALL_TARGETS_FLAT, Optional.empty()));
   }
 }

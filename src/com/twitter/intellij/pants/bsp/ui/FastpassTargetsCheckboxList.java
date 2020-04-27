@@ -22,14 +22,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 class FastpassTargetsCheckboxList extends JComponent {
 
-  public FastpassTargetsCheckboxList(Consumer<String> onSelection,
-                             Consumer<String> onDeselection) {
+  public FastpassTargetsCheckboxList(Consumer<PantsTargetAddress> onSelection,
+                             Consumer<PantsTargetAddress> onDeselection) {
     this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     checkboxPanel.setCheckBoxListListener ((index, value) -> {
-      String item = checkboxPanel.getItemAt(index);
+      PantsTargetAddress item = checkboxPanel.getItemAt(index);
       if (value) onSelection.accept(item); else onDeselection.accept(item);
     });
 //    mainPanel.add(myScrollPaneCheckbox);
@@ -50,7 +51,7 @@ class FastpassTargetsCheckboxList extends JComponent {
   }
 
   @NotNull
-  CheckBoxList<String> checkboxPanel =  new CheckBoxList<>();
+  CheckBoxList<PantsTargetAddress> checkboxPanel =  new CheckBoxList<>();
 
   @NotNull
   JPanel mainPanel = createMainPanel();
@@ -58,9 +59,9 @@ class FastpassTargetsCheckboxList extends JComponent {
   JScrollPane myScrollPaneCheckbox = ScrollPaneFactory.createScrollPane(checkboxPanel);
 
 
-  private void updateCheckboxList(Collection<String> targets, Set<String> selected) {
-    checkboxPanel.setItems(new ArrayList<>(targets), x -> x);
-    for (String target : targets) {
+  private void updateCheckboxList(Collection<PantsTargetAddress> targets, Set<PantsTargetAddress> selected) {
+    checkboxPanel.setItems(new ArrayList<>(targets), x -> x.toAddressString());
+    for (PantsTargetAddress target : targets) {
       checkboxPanel.setItemSelected(target, selected.contains(target));
     }
   }
@@ -70,7 +71,7 @@ class FastpassTargetsCheckboxList extends JComponent {
     mainPanel.add(icon);
   }
 
-  public void  setItems(Collection<String> value, Set<String> selected) {
+  public void  setItems(Collection<PantsTargetAddress> value, Set<PantsTargetAddress> selected) {
     mainPanel.removeAll();
     mainPanel.add(myScrollPaneCheckbox);
     updateCheckboxList(value, selected);
