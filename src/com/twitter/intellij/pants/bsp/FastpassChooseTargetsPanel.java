@@ -26,6 +26,7 @@ import java.util.function.Function;
 
 
 class FastpassChooseTargetsPanel extends JPanel {
+  // TODO refresh button
   public FastpassChooseTargetsPanel(
     @NotNull Project project,
     @NotNull PantsBspData importData,

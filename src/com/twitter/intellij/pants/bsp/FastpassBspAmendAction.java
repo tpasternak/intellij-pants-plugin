@@ -110,6 +110,5 @@ public class FastpassBspAmendAction extends AnAction {
       }
     },"Amending", false, project );
     ExternalProjectUtil.refresh(project, BSP.ProjectSystemId());
-
   }
 }
