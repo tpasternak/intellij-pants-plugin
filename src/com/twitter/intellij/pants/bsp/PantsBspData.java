@@ -42,8 +42,8 @@ final public class PantsBspData {
                   FastpassUtils.pantsRoots(module).findFirst().isPresent()
         )
         .map(module -> {
-          VirtualFile pantsRoots = FastpassUtils.pantsRoots(module).findFirst().get();
-          Path bspRoot= Paths.get(ExternalSystemModulePropertyManager.getInstance(module).getLinkedProjectPath());
+          VirtualFile pantsRoots = FastpassUtils.pantsRoots(module).findFirst().get(); // todo handle null
+          Path bspRoot= Paths.get(ExternalSystemModulePropertyManager.getInstance(module).getLinkedProjectPath()); // todo handle null
           return new PantsBspData(bspRoot, pantsRoots);
         })
         .collect(Collectors.toSet());
