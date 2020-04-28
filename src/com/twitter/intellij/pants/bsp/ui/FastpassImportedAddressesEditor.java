@@ -122,7 +122,7 @@ public class FastpassImportedAddressesEditor extends JPanel {
     return checkboxPanel;
   }
 
-
+  // todo handle parent deep selected here
   void updateEnablement(Consumer<Collection<PantsTargetAddress>> update, Path path) {
     if(checkboxSelectAllDeep.isSelected()) {
       update.accept(
