@@ -11,17 +11,17 @@ import java.util.Optional;
 // Todo testme
 public class PantsTargetAddress {
 
-  public enum SelectionKind {
+  public enum AddressKind {
     ALL_TARGETS_FLAT,
     ALL_TARGETS_DEEP,
     SINGLE_TARGETS
   }
 
   @NotNull private String myPath;
-  @NotNull private SelectionKind myKind;
+  @NotNull private AddressKind myKind;
   @NotNull private Optional<String> myTargets;
 
-  public PantsTargetAddress(@NotNull String path, @NotNull SelectionKind kind, @NotNull Optional<String> targets) {
+  public PantsTargetAddress(@NotNull String path, @NotNull AddressKind kind, @NotNull Optional<String> targets) {
     myPath = path;
     myKind = kind;
     myTargets = targets;
@@ -41,11 +41,11 @@ public class PantsTargetAddress {
     String[] strings = s.split(":");
 
     if (strings.length == 2) {
-      return new PantsTargetAddress(strings[0], SelectionKind.SINGLE_TARGETS, Optional.of(strings[1]));
+      return new PantsTargetAddress(strings[0], AddressKind.SINGLE_TARGETS, Optional.of(strings[1]));
     } else if (s.endsWith("::")) {
-      return new PantsTargetAddress(strings[0], SelectionKind.ALL_TARGETS_DEEP, Optional.empty());
+      return new PantsTargetAddress(strings[0], AddressKind.ALL_TARGETS_DEEP, Optional.empty());
     } else if (s.endsWith(":")) {
-      return new PantsTargetAddress(strings[0], SelectionKind.ALL_TARGETS_FLAT, Optional.empty());
+      return new PantsTargetAddress(strings[0], AddressKind.ALL_TARGETS_FLAT, Optional.empty());
     } else {
       throw new RuntimeException("");//todo better
     }
@@ -55,7 +55,7 @@ public class PantsTargetAddress {
     return myPath;
   }
 
-  public SelectionKind getKind() {
+  public AddressKind getKind() {
     return myKind;
   }
 

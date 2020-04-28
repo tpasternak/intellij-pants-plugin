@@ -10,17 +10,17 @@ import java.util.Optional;
 public class PantsTargetAddressTest extends UsefulTestCase {
   public void testDirectEntry() {
     PantsTargetAddress t = PantsTargetAddress.fromString("project:target");
-    assertEquals(t, new PantsTargetAddress("project", PantsTargetAddress.SelectionKind.SINGLE_TARGETS, Optional.of("target")));
+    assertEquals(t, new PantsTargetAddress("project", PantsTargetAddress.AddressKind.SINGLE_TARGETS, Optional.of("target")));
   }
 
   public void testRecursiveEntry() {
     PantsTargetAddress t = PantsTargetAddress.fromString("project::");
-    assertEquals(t, new PantsTargetAddress("project", PantsTargetAddress.SelectionKind.ALL_TARGETS_DEEP, Optional.empty()));
+    assertEquals(t, new PantsTargetAddress("project", PantsTargetAddress.AddressKind.ALL_TARGETS_DEEP, Optional.empty()));
   }
 
   public void testFlatEntry() {
     PantsTargetAddress t = PantsTargetAddress.fromString("project:");
 
-    assertEquals(t, new PantsTargetAddress("project", PantsTargetAddress.SelectionKind.ALL_TARGETS_FLAT, Optional.empty()));
+    assertEquals(t, new PantsTargetAddress("project", PantsTargetAddress.AddressKind.ALL_TARGETS_FLAT, Optional.empty()));
   }
 }

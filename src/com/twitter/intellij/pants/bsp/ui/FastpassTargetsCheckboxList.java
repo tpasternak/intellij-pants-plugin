@@ -79,6 +79,10 @@ class FastpassTargetsCheckboxList extends JComponent {
   ) {
     mainPanel.removeAll();
 
+    JPanel panel = new JPanel();
+    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+    panel.setPreferredSize(JBUI.size(300, 500));
+
     CheckBoxList<PantsTargetAddress> cbList = createCheckboxList(value, selected, update);
     JScrollPane cbScroll = ScrollPaneFactory.createScrollPane(cbList);
     JCheckBox checkboxSelectAllFlat = new JCheckBox(PantsBundle.message("pants.bsp.all.in.dir.flat"));
@@ -86,11 +90,11 @@ class FastpassTargetsCheckboxList extends JComponent {
 
     Runnable updateEnablement = () -> {
       if(checkboxSelectAllDeep.isSelected()) {
-        update.accept(Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.SelectionKind.ALL_TARGETS_DEEP, Optional.empty())));
+        update.accept(Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.AddressKind.ALL_TARGETS_DEEP, Optional.empty())));
         cbList.setEnabled(false);
         checkboxSelectAllFlat.setEnabled(false);
       } else if(checkboxSelectAllFlat.isSelected()){
-        update.accept(Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.SelectionKind.ALL_TARGETS_FLAT, Optional.empty())));
+        update.accept(Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.AddressKind.ALL_TARGETS_FLAT, Optional.empty())));
         cbList.setEnabled(false);
         checkboxSelectAllDeep.setEnabled(false);
       } else {
@@ -103,13 +107,13 @@ class FastpassTargetsCheckboxList extends JComponent {
     checkboxSelectAllFlat.addItemListener(e -> updateEnablement.run());
     checkboxSelectAllDeep.addItemListener(e -> updateEnablement.run());
 
-    if(selected.stream().anyMatch(x -> x.getPath().equals(path.toString()) && x.getKind() == PantsTargetAddress.SelectionKind.ALL_TARGETS_FLAT)) {
+    if(selected.stream().anyMatch(x -> x.getPath().equals(path.toString()) && x.getKind() == PantsTargetAddress.AddressKind.ALL_TARGETS_FLAT)) {
       checkboxSelectAllFlat.setSelected(true);
-    } else if(selected.stream().anyMatch(x -> x.getPath().equals(path.toString()) && x.getKind() == PantsTargetAddress.SelectionKind.ALL_TARGETS_DEEP)) {
+    } else if(selected.stream().anyMatch(x -> x.getPath().equals(path.toString()) && x.getKind() == PantsTargetAddress.AddressKind.ALL_TARGETS_DEEP)) {
       checkboxSelectAllDeep.setSelected(true);
     } else if(selected.stream()
       .filter(x -> x.getPath().equals(path.toString()))
-      .allMatch(x -> x.getKind() == PantsTargetAddress.SelectionKind.SINGLE_TARGETS)) {
+      .allMatch(x -> x.getKind() == PantsTargetAddress.AddressKind.SINGLE_TARGETS)) {
       checkboxSelectAllDeep.setSelected(false);
       checkboxSelectAllFlat.setSelected(false);
     } else if(selected.stream().noneMatch(x -> x.getPath().equals(path.toString()))) {
@@ -117,9 +121,11 @@ class FastpassTargetsCheckboxList extends JComponent {
       checkboxSelectAllFlat.setSelected(false);
     }
 
-    mainPanel.add(cbScroll);
-    mainPanel.add(checkboxSelectAllFlat);
-    mainPanel.add(checkboxSelectAllDeep);
+    panel.add(cbScroll);
+    panel.add(checkboxSelectAllFlat);
+    panel.add(checkboxSelectAllDeep);
+
+    mainPanel.add(panel);
   }
 
 
