@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -47,7 +48,7 @@ class FastpassTargetsCheckboxList extends JComponent {
   JPanel mainPanel = createMainPanel();
 
   private CheckBoxList<PantsTargetAddress> updateCheckboxList(Collection<PantsTargetAddress> targets, Set<PantsTargetAddress> selected,
-                                                              Path path, BiConsumer<String, Collection<PantsTargetAddress>> update) {
+                                                              Path path, Consumer<Collection<PantsTargetAddress>> update) {
     CheckBoxList<PantsTargetAddress> checkboxPanel =  new CheckBoxList<>();
     CheckBoxList<PantsTargetAddress> cb = checkboxPanel;
     cb.setCheckBoxListListener ((index, value) -> {
@@ -56,7 +57,7 @@ class FastpassTargetsCheckboxList extends JComponent {
         .filter(cb::isItemSelected)
         .mapToObj(cb::getItemAt)
         .collect(Collectors.toList());
-      update.accept(path.toString(), newSelected); // [x] todo maybe store path in a different place ...
+      update.accept(newSelected); // [x] todo maybe store path in a different place ...
     });
 
 
@@ -76,7 +77,7 @@ class FastpassTargetsCheckboxList extends JComponent {
   public void  setItems(Collection<PantsTargetAddress> value,
                         Set<PantsTargetAddress> selected,
                         Path path,
-                        BiConsumer<String, Collection<PantsTargetAddress>> update
+                        Consumer<Collection<PantsTargetAddress>> update
   ) {
     mainPanel.removeAll();
 
@@ -90,11 +91,11 @@ class FastpassTargetsCheckboxList extends JComponent {
 
     checkboxSelectAllFlat.addItemListener(e -> {
       if (e.getStateChange() == ItemEvent.DESELECTED) {
-        update.accept(path.toString(), Collections.emptyList());
+        update.accept(Collections.emptyList());
         cbList.setEnabled(true);
         checkboxSelectAllDeep.setEnabled(true);
       } else if(e.getStateChange() == ItemEvent.SELECTED) {
-        update.accept(path.toString(), Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.SelectionKind.ALL_TARGETS_FLAT, Optional.empty())));
+        update.accept(Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.SelectionKind.ALL_TARGETS_FLAT, Optional.empty())));
         cbList.setEnabled(false);
         checkboxSelectAllDeep.setEnabled(false);
       }
@@ -102,11 +103,11 @@ class FastpassTargetsCheckboxList extends JComponent {
 
     checkboxSelectAllDeep.addItemListener(e -> {
       if (e.getStateChange() == ItemEvent.DESELECTED) {
-        update.accept(path.toString(), Collections.emptyList());
+        update.accept(Collections.emptyList());
         cbList.setEnabled(true);
         checkboxSelectAllFlat.setEnabled(true);
       } else if(e.getStateChange() == ItemEvent.SELECTED) {
-        update.accept(path.toString(), Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.SelectionKind.ALL_TARGETS_DEEP, Optional.empty())));
+        update.accept(Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.SelectionKind.ALL_TARGETS_DEEP, Optional.empty())));
         cbList.setEnabled(false);
         checkboxSelectAllFlat.setEnabled(false);
       }

@@ -19,6 +19,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
@@ -118,23 +119,28 @@ class FastpassChooseTargetsPanel extends JPanel {
       myTargetsListPanel.setLoading();
       mainPanel.updateUI();
     }
-    targetsList.whenComplete((targetsInDir, error) ->
-                               SwingUtilities.invokeLater(() -> {
-                                 if (myFileSystemTree.getSelectedFile().equals(selectedFile)) {
-                                   if (error == null) {
-                                     myTargetsListPanel.setItems(targetsInDir, mySelectedTargets,
-                                                                 Paths.get(myImportData.getPantsRoot().getPath()).relativize(Paths.get(selectedFile.getPath()))
-                                       ,   (path, items) ->{
-                                         mySelectedTargets.removeIf(x -> x.getPath().equals(path));
-                                         mySelectedTargets.addAll(items);
-                                       });
-                                     mainPanel.updateUI();
-                                   }
-                                   else {
-                                     myTargetsListPanel.clear();
-                                     mainPanel.updateUI();
-                                   }
-                                 }
-                               }));
+    targetsList.whenComplete((targetsInDir, error) -> {
+      SwingUtilities.invokeLater(() -> {
+        if (myFileSystemTree.getSelectedFile().equals(selectedFile)) {
+          if (error == null) {
+            Path path = Paths.get(myImportData.getPantsRoot().getPath()).relativize(Paths.get(selectedFile.getPath()));
+            myTargetsListPanel.setItems(
+              targetsInDir,
+              mySelectedTargets,
+              path,
+              items -> {
+                mySelectedTargets.removeIf(x -> x.getPath().equals(path.toString()));
+                mySelectedTargets.addAll(items);
+              }
+            );
+            mainPanel.updateUI();
+          }
+          else {
+            myTargetsListPanel.clear();
+            mainPanel.updateUI();
+          }
+        }
+      });
+    });
   }
 }
