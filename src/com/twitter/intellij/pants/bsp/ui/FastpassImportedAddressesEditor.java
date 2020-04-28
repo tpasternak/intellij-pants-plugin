@@ -126,6 +126,7 @@ public class FastpassImportedAddressesEditor extends JPanel {
   void updateEnablement(Consumer<Collection<PantsTargetAddress>> update, Path path) {
     if(checkboxSelectAllDeep.isSelected()) {
       update.accept(
+        // TODO zrób jakieś konstruktory do tego
         Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.AddressKind.ALL_TARGETS_DEEP, Optional.empty())));
 
       checkBoxList.setEnabled(false);
