@@ -18,7 +18,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import java.awt.event.ItemEvent;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -65,10 +64,12 @@ class FastpassTargetsCheckboxList extends JComponent {
   @NotNull
   JPanel mainPanel = createMainPanel();
 
+  @NotNull
   JScrollPane myScrollPaneCheckbox = ScrollPaneFactory.createScrollPane(checkboxPanel);
 
-
   private void updateCheckboxList(Collection<PantsTargetAddress> targets, Set<PantsTargetAddress> selected) {
+    //CheckBoxList<PantsTargetAddress> checkboxPanel =  new CheckBoxList<>();
+    checkboxPanel.setPreferredSize(JBUI.size(300,500));
     checkboxPanel.setItems(new ArrayList<>(targets), x -> x.toAddressString());
     for (PantsTargetAddress target : targets) {
       checkboxPanel.setItemSelected(target, selected.contains(target));
@@ -83,35 +84,69 @@ class FastpassTargetsCheckboxList extends JComponent {
   public void  setItems(Collection<PantsTargetAddress> value, Set<PantsTargetAddress> selected, Path path) {
     mainPanel.removeAll();
     mainPanel.add(myScrollPaneCheckbox);
+
     updateCheckboxList(value, selected);
 
     JCheckBox checkboxSelectAllFlat = new JCheckBox("all in dir (:)");
+
+    JCheckBox checkboxSelectAllDeep = new JCheckBox("recursive all in dir (::)");
+
     checkboxSelectAllFlat.addItemListener(e -> {
       if (e.getStateChange() == ItemEvent.DESELECTED) {
         myUpdate.accept(path.toString(), Collections.emptyList());
+        checkboxPanel.setEnabled(true);
+        checkboxSelectAllDeep.setEnabled(true);
       } else if(e.getStateChange() == ItemEvent.SELECTED) {
         myUpdate.accept(path.toString(), Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.SelectionKind.ALL_TARGETS_FLAT, Optional.empty())));
+        checkboxPanel.setEnabled(false);
+        checkboxSelectAllDeep.setEnabled(false);
       }
     });
 
-    JCheckBox checkboxSelectAllDeep = new JCheckBox("recursive all in dir (::)");
     checkboxSelectAllDeep.addItemListener(e -> {
       if (e.getStateChange() == ItemEvent.DESELECTED) {
         myUpdate.accept(path.toString(), Collections.emptyList());
+        checkboxPanel.setEnabled(true);
+        checkboxSelectAllFlat.setEnabled(true);
       } else if(e.getStateChange() == ItemEvent.SELECTED) {
         myUpdate.accept(path.toString(), Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.SelectionKind.ALL_TARGETS_DEEP, Optional.empty())));
+        checkboxPanel.setEnabled(false);
+        checkboxSelectAllFlat.setEnabled(false);
       }
     });
 
     mainPanel.add(checkboxSelectAllFlat);
     mainPanel.add(checkboxSelectAllDeep);
+
+
+    if(selected.stream().anyMatch(x -> x.getPath().equals(path.toString()) && x.getKind() == PantsTargetAddress.SelectionKind.ALL_TARGETS_FLAT)) {
+      checkboxSelectAllFlat.setSelected(true);
+    }
+
+    if(selected.stream().anyMatch(x -> x.getPath().equals(path.toString()) && x.getKind() == PantsTargetAddress.SelectionKind.ALL_TARGETS_DEEP)) {
+      checkboxSelectAllDeep.setSelected(true);
+    }
+
+    if(selected.stream()
+      .filter(x -> x.getPath().equals(path.toString()))
+      .allMatch(x -> x.getKind() == PantsTargetAddress.SelectionKind.SINGLE_TARGETS)) {
+      checkboxSelectAllDeep.setSelected(false);
+      checkboxSelectAllFlat.setSelected(false);
+    }
+
+    if(selected.stream().noneMatch(x -> x.getPath().equals(path.toString()))) {
+      checkboxSelectAllDeep.setSelected(false);
+      checkboxSelectAllFlat.setSelected(false);
+    }
   }
+
 
   public void setLoading() {
     updateTargetsListWithMessage(new AsyncProcessIcon(""));
   }
 
+
   public void clear() {
-    setItems(Collections.emptyList(), Collections.emptySet(), Paths.get("")); // todo no literal ""
+    mainPanel.removeAll(); // [x] todo no literal "", clear should not all "SetItems"
   }
 }

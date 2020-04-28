@@ -105,6 +105,7 @@ class FastpassChooseTargetsPanel extends JPanel {
       updateCheckboxList(selectedFile);
     } else {
       myTargetsListPanel.clear();
+      this.updateUI();
     }
   }
 
