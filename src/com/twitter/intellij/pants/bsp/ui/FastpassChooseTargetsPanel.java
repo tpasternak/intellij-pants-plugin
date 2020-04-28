@@ -49,7 +49,7 @@ class FastpassChooseTargetsPanel extends JPanel {
     fileSystemTreeScrollPane.setPreferredSize(JBUI.size(400, 500));
     mainPanel.add(fileSystemTreeScrollPane);
 
-    myTargetsListPanel = new FastpassTargetsCheckboxList(
+    myTargetsListPanel = new FastpassAddressesViewPanel(
     );
     mainPanel.add(myTargetsListPanel);
 
@@ -73,7 +73,7 @@ class FastpassChooseTargetsPanel extends JPanel {
 
   FileSystemTreeImpl myFileSystemTree = null;
 
-  FastpassTargetsCheckboxList myTargetsListPanel = null;
+  FastpassAddressesViewPanel myTargetsListPanel = null;
 
   @NotNull
   public Collection<PantsTargetAddress> selectedItems() {
