@@ -8,6 +8,7 @@ import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.util.ui.JBUI;
 import com.twitter.intellij.pants.PantsBundle;
 import com.twitter.intellij.pants.bsp.PantsTargetAddress;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -25,48 +26,39 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class FastpassImportedAddressesEditor extends JPanel {
-  private Collection<PantsTargetAddress> myValue;
-  private Set<PantsTargetAddress> mySelected;
-  private Path myPath;
-  private Consumer<Collection<PantsTargetAddress>> myUpdate;
+  @NotNull final CheckBoxList<PantsTargetAddress> checkBoxList;
+  @NotNull final JScrollPane checkboxListScroll;
+  @NotNull final JCheckBox checkboxSelectAllFlat;
+  @NotNull final JCheckBox checkboxSelectAllDeep;
 
   public FastpassImportedAddressesEditor(
-    Collection<PantsTargetAddress> value,
-    Set<PantsTargetAddress> selected,
-    Path path,
-    Consumer<Collection<PantsTargetAddress>> update) {
-    myValue = value;
-    mySelected = selected;
-    myPath = path;
-    myUpdate = update;
+    @NotNull Collection<PantsTargetAddress> value,
+    @NotNull Set<PantsTargetAddress> selected,
+    @NotNull Path path,
+    @NotNull Consumer<Collection<PantsTargetAddress>> update) {
 
     this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-    CheckBoxList<PantsTargetAddress> checkBoxList = createCheckboxList(value, selected, update);
-    JScrollPane cbScroll = ScrollPaneFactory.createScrollPane(checkBoxList);
-    JCheckBox checkboxSelectAllFlat = new JCheckBox(PantsBundle.message("pants.bsp.all.in.dir.flat"));
-    JCheckBox checkboxSelectAllDeep = new JCheckBox(PantsBundle.message("pants.bsp.all.in.dir.recursive"));
+    checkBoxList = createCheckboxList(value, selected, update);
+    checkboxListScroll = ScrollPaneFactory.createScrollPane(checkBoxList);
 
-    Runnable updateEnablement = () -> {
-      if(checkboxSelectAllDeep.isSelected()) {
-        update.accept(
-          Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.AddressKind.ALL_TARGETS_DEEP, Optional.empty())));
-        checkBoxList.setEnabled(false);
-        checkboxSelectAllFlat.setEnabled(false);
-      } else if(checkboxSelectAllFlat.isSelected()){
-        update.accept(Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.AddressKind.ALL_TARGETS_FLAT, Optional.empty())));
-        checkBoxList.setEnabled(false);
-        checkboxSelectAllDeep.setEnabled(false);
-      } else {
-        checkBoxList.setEnabled(true);
-        checkboxSelectAllDeep.setEnabled(true);
-        checkboxSelectAllFlat.setEnabled(true);
-      }
-    };
+    checkboxSelectAllFlat = new JCheckBox(PantsBundle.message("pants.bsp.all.in.dir.flat"));
+    checkboxSelectAllFlat.addItemListener(e -> updateEnablement(update, path));
 
-    checkboxSelectAllFlat.addItemListener(e -> updateEnablement.run());
-    checkboxSelectAllDeep.addItemListener(e -> updateEnablement.run());
+    checkboxSelectAllDeep = new JCheckBox(PantsBundle.message("pants.bsp.all.in.dir.recursive"));
+    checkboxSelectAllDeep.addItemListener(e -> updateEnablement(update, path));
 
+    setupInitialCheckboxesSelection(selected, path);
+
+    this.add(checkboxListScroll);
+    this.add(checkboxSelectAllFlat);
+    this.add(checkboxSelectAllDeep);
+  }
+
+  private void setupInitialCheckboxesSelection(
+    @NotNull Set<PantsTargetAddress> selected,
+    @NotNull Path path
+  ) {
     if(selected.stream().anyMatch(x -> x.getPath().equals(path.toString()) && x.getKind() == PantsTargetAddress.AddressKind.ALL_TARGETS_FLAT)) {
       checkboxSelectAllFlat.setSelected(true);
     } else if(selected.stream().anyMatch(x -> x.getPath().equals(path.toString()) && x.getKind() == PantsTargetAddress.AddressKind.ALL_TARGETS_DEEP)) {
@@ -80,10 +72,6 @@ public class FastpassImportedAddressesEditor extends JPanel {
       checkboxSelectAllDeep.setSelected(false);
       checkboxSelectAllFlat.setSelected(false);
     }
-
-    this.add(cbScroll);
-    this.add(checkboxSelectAllFlat);
-    this.add(checkboxSelectAllDeep);
   }
 
   private CheckBoxList<PantsTargetAddress> createCheckboxList(Collection<PantsTargetAddress> targets, Set<PantsTargetAddress> selected,
@@ -98,7 +86,6 @@ public class FastpassImportedAddressesEditor extends JPanel {
       update.accept(newSelected); // [x] todo maybe store path in a different place ...
     });
 
-
     checkboxPanel.setPreferredSize(JBUI.size(300,500));
     checkboxPanel.setItems(new ArrayList<>(targets), PantsTargetAddress::toAddressString);
     for (PantsTargetAddress target : targets) {
@@ -106,4 +93,23 @@ public class FastpassImportedAddressesEditor extends JPanel {
     }
     return checkboxPanel;
   }
+
+
+  void updateEnablement(Consumer<Collection<PantsTargetAddress>> update, Path path) {
+    if(checkboxSelectAllDeep.isSelected()) {
+      update.accept(
+        Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.AddressKind.ALL_TARGETS_DEEP, Optional.empty())));
+      checkBoxList.setEnabled(false);
+      checkboxSelectAllFlat.setEnabled(false);
+    } else if(checkboxSelectAllFlat.isSelected()){
+      update.accept(Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.AddressKind.ALL_TARGETS_FLAT, Optional.empty())));
+      checkBoxList.setEnabled(false);
+      checkboxSelectAllDeep.setEnabled(false);
+    } else {
+      checkBoxList.setEnabled(true);
+      checkboxSelectAllDeep.setEnabled(true);
+      checkboxSelectAllFlat.setEnabled(true);
+    }
+  };
+
 }
