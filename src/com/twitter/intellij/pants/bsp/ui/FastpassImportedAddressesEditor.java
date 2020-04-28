@@ -76,7 +76,7 @@ public class FastpassImportedAddressesEditor extends JPanel {
     @NotNull Set<PantsTargetAddress> selected,
     @NotNull Path path
   ) {
-    return selected.stream().noneMatch(x -> x.getPath().equals(path.toString()));
+    return selected.stream().noneMatch(x -> x.getPath().equals(path));
   }
 
   private boolean singleTargetsSelected(
@@ -84,7 +84,7 @@ public class FastpassImportedAddressesEditor extends JPanel {
     @NotNull Path path
   ) {
     return selected.stream()
-      .filter(x -> x.getPath().equals(path.toString()))
+      .filter(x -> x.getPath().equals(path))
       .allMatch(x -> x.getKind() == PantsTargetAddress.AddressKind.SINGLE_TARGETS);
   }
 
@@ -92,14 +92,14 @@ public class FastpassImportedAddressesEditor extends JPanel {
     @NotNull Set<PantsTargetAddress> selected,
     @NotNull Path path
   ) {
-    return selected.stream().anyMatch(x -> x.getPath().equals(path.toString()) && x.getKind() == PantsTargetAddress.AddressKind.ALL_TARGETS_DEEP);
+    return selected.stream().anyMatch(x -> x.getPath().equals(path) && x.getKind() == PantsTargetAddress.AddressKind.ALL_TARGETS_DEEP);
   }
 
   private boolean flatAllInDirSelected(
     @NotNull Set<PantsTargetAddress> selected,
     @NotNull Path path
   ) {
-    return selected.stream().anyMatch(x -> x.getPath().equals(path.toString()) && x.getKind() == PantsTargetAddress.AddressKind.ALL_TARGETS_FLAT);
+    return selected.stream().anyMatch(x -> x.getPath().equals(path) && x.getKind() == PantsTargetAddress.AddressKind.ALL_TARGETS_FLAT);
   }
 
   private CheckBoxList<PantsTargetAddress> createCheckboxList(Collection<PantsTargetAddress> targets, Set<PantsTargetAddress> selected,
@@ -127,13 +127,13 @@ public class FastpassImportedAddressesEditor extends JPanel {
     if(checkboxSelectAllDeep.isSelected()) {
       update.accept(
         // TODO zrób jakieś konstruktory do tego
-        Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.AddressKind.ALL_TARGETS_DEEP, Optional.empty())));
+        Collections.singletonList(new PantsTargetAddress(path, PantsTargetAddress.AddressKind.ALL_TARGETS_DEEP, Optional.empty())));
 
       checkBoxList.setEnabled(false);
       checkboxSelectAllFlat.setEnabled(false);
       checkboxSelectAllDeep.setEnabled(true);
     } else if(checkboxSelectAllFlat.isSelected()){
-      update.accept(Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.AddressKind.ALL_TARGETS_FLAT, Optional.empty())));
+      update.accept(Collections.singletonList(new PantsTargetAddress(path, PantsTargetAddress.AddressKind.ALL_TARGETS_FLAT, Optional.empty())));
 
       checkBoxList.setEnabled(false);
       checkboxSelectAllFlat.setEnabled(true);

@@ -129,7 +129,7 @@ class FastpassChooseTargetsPanel extends JPanel {
               mySelectedTargets,
               path,
               items -> {
-                mySelectedTargets.removeIf(x -> x.getPath().equals(path.toString()));
+                mySelectedTargets.removeIf(x -> x.getPath().equals(path));
                 mySelectedTargets.addAll(items);
               }
             );

@@ -5,6 +5,8 @@ package com.twitter.intellij.pants.bsp;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -17,11 +19,11 @@ public class PantsTargetAddress {
     SINGLE_TARGETS
   }
 
-  @NotNull private String myPath;
+  @NotNull private Path myPath;
   @NotNull private AddressKind myKind;
   @NotNull private Optional<String> myTargets;
 
-  public PantsTargetAddress(@NotNull String path, @NotNull AddressKind kind, @NotNull Optional<String> targets) {
+  public PantsTargetAddress(@NotNull Path path, @NotNull AddressKind kind, @NotNull Optional<String> targets) {
     myPath = path;
     myKind = kind;
     myTargets = targets;
@@ -41,17 +43,17 @@ public class PantsTargetAddress {
     String[] strings = s.split(":");
 
     if (strings.length == 2) {
-      return new PantsTargetAddress(strings[0], AddressKind.SINGLE_TARGETS, Optional.of(strings[1]));
+      return new PantsTargetAddress(Paths.get(strings[0]), AddressKind.SINGLE_TARGETS, Optional.of(strings[1]));
     } else if (s.endsWith("::")) {
-      return new PantsTargetAddress(strings[0], AddressKind.ALL_TARGETS_DEEP, Optional.empty());
+      return new PantsTargetAddress(Paths.get(strings[0]), AddressKind.ALL_TARGETS_DEEP, Optional.empty());
     } else if (s.endsWith(":")) {
-      return new PantsTargetAddress(strings[0], AddressKind.ALL_TARGETS_FLAT, Optional.empty());
+      return new PantsTargetAddress(Paths.get(strings[0]), AddressKind.ALL_TARGETS_FLAT, Optional.empty());
     } else {
-      throw new RuntimeException("");//todo better
+      throw new RuntimeException("PantsTargetAddress: could not parse string '" + s + "'");// [x] todo better
     }
   }
 
-  public String getPath() {
+  public Path getPath() {
     return myPath;
   }
 
