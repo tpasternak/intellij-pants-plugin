@@ -42,26 +42,40 @@ public class FastpassManagerDialog extends DialogWrapper {
     setTitle(PantsBundle.message("pants.bsp.select.targets"));
     init();
 
-    importedTargets.whenComplete((targets, error) ->
-                               SwingUtilities.invokeLater(() -> {
-                                   if (error == null) {
-                                     mainPanel.removeAll();
-                                     myChooseTargetsPanel = new FastpassChooseTargetsPanel(project, importData, targets, targetsListFetcher);
-                                     mainPanel.add(myChooseTargetsPanel);
-                                     setOKButtonText(CommonBundle.getOkButtonText());
-                                     mainPanel.updateUI();
-                                   }
-                                   else {
-                                     mainPanel.removeAll();
-                                     mainPanel.add(new JLabel(PantsBundle.message("pants.bsp.error.failed.to.fetch.targets"),
-                                                              PlatformIcons.ERROR_INTRODUCTION_ICON,
-                                                              SwingConstants.CENTER
-                                     ));
-                                     logger.error(error);
-                                     mainPanel.updateUI();
-                                   }
-                               }));
+    importedTargets.whenComplete(
+      (targets, error) ->
+        SwingUtilities.invokeLater(() -> {
+          if (error == null) {
+            showFastpassChooseTargetsPanel(project, importData, targetsListFetcher, targets);
+          }
+          else {
+            logger.error(error);
+            showCurrentTargetsFetchError();
+          }
+        }));
+  }
 
+  private void showFastpassChooseTargetsPanel(
+    @NotNull Project project,
+    @NotNull PantsBspData importData,
+    @NotNull Function<VirtualFile, CompletableFuture<Collection<PantsTargetAddress>>> targetsListFetcher,
+    Set<PantsTargetAddress> targets
+  ) {
+    mainPanel.removeAll();
+    myChooseTargetsPanel = new FastpassChooseTargetsPanel(project, importData, targets, targetsListFetcher);
+    mainPanel.add(myChooseTargetsPanel);
+    setOKButtonText(CommonBundle.getOkButtonText());
+    mainPanel.updateUI();
+  }
+
+  private void showCurrentTargetsFetchError() {
+    mainPanel.removeAll();
+    mainPanel.add(new JLabel(
+      PantsBundle.message("pants.bsp.error.failed.to.fetch.targets"),
+      PlatformIcons.ERROR_INTRODUCTION_ICON,
+      SwingConstants.CENTER
+    ));
+    mainPanel.updateUI();
   }
 
   @NotNull

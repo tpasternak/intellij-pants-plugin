@@ -59,19 +59,47 @@ public class FastpassImportedAddressesEditor extends JPanel {
     @NotNull Set<PantsTargetAddress> selected,
     @NotNull Path path
   ) {
-    if(selected.stream().anyMatch(x -> x.getPath().equals(path.toString()) && x.getKind() == PantsTargetAddress.AddressKind.ALL_TARGETS_FLAT)) {
+    if(flatAllInDirSelected(selected, path)) {
       checkboxSelectAllFlat.setSelected(true);
-    } else if(selected.stream().anyMatch(x -> x.getPath().equals(path.toString()) && x.getKind() == PantsTargetAddress.AddressKind.ALL_TARGETS_DEEP)) {
+    } else if(deepAllInDirSelected(selected, path)) {
       checkboxSelectAllDeep.setSelected(true);
-    } else if(selected.stream()
-      .filter(x -> x.getPath().equals(path.toString()))
-      .allMatch(x -> x.getKind() == PantsTargetAddress.AddressKind.SINGLE_TARGETS)) {
+    } else if(singleTargetsSelected(selected, path)) {
       checkboxSelectAllDeep.setSelected(false);
       checkboxSelectAllFlat.setSelected(false);
-    } else if(selected.stream().noneMatch(x -> x.getPath().equals(path.toString()))) {
+    } else if(nothingSelected(selected, path)) {
       checkboxSelectAllDeep.setSelected(false);
       checkboxSelectAllFlat.setSelected(false);
     }
+  }
+
+  private boolean nothingSelected(
+    @NotNull Set<PantsTargetAddress> selected,
+    @NotNull Path path
+  ) {
+    return selected.stream().noneMatch(x -> x.getPath().equals(path.toString()));
+  }
+
+  private boolean singleTargetsSelected(
+    @NotNull Set<PantsTargetAddress> selected,
+    @NotNull Path path
+  ) {
+    return selected.stream()
+      .filter(x -> x.getPath().equals(path.toString()))
+      .allMatch(x -> x.getKind() == PantsTargetAddress.AddressKind.SINGLE_TARGETS);
+  }
+
+  private boolean deepAllInDirSelected(
+    @NotNull Set<PantsTargetAddress> selected,
+    @NotNull Path path
+  ) {
+    return selected.stream().anyMatch(x -> x.getPath().equals(path.toString()) && x.getKind() == PantsTargetAddress.AddressKind.ALL_TARGETS_DEEP);
+  }
+
+  private boolean flatAllInDirSelected(
+    @NotNull Set<PantsTargetAddress> selected,
+    @NotNull Path path
+  ) {
+    return selected.stream().anyMatch(x -> x.getPath().equals(path.toString()) && x.getKind() == PantsTargetAddress.AddressKind.ALL_TARGETS_FLAT);
   }
 
   private CheckBoxList<PantsTargetAddress> createCheckboxList(Collection<PantsTargetAddress> targets, Set<PantsTargetAddress> selected,
