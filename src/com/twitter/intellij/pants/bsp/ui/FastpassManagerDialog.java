@@ -46,8 +46,8 @@ public class FastpassManagerDialog extends DialogWrapper {
                                SwingUtilities.invokeLater(() -> {
                                    if (error == null) {
                                      mainPanel.removeAll();
-                                     manager = new FastpassChooseTargetsPanel(project, importData, targets, targetsListFetcher);
-                                     mainPanel.add(manager);
+                                     myChooseTargetsPanel = new FastpassChooseTargetsPanel(project, importData, targets, targetsListFetcher);
+                                     mainPanel.add(myChooseTargetsPanel);
                                      setOKButtonText(CommonBundle.getOkButtonText());
                                      mainPanel.updateUI();
                                    }
@@ -67,7 +67,7 @@ public class FastpassManagerDialog extends DialogWrapper {
   @NotNull
   static Logger logger = Logger.getInstance(FastpassManagerDialog.class);
 
-  FastpassChooseTargetsPanel manager;
+  FastpassChooseTargetsPanel myChooseTargetsPanel;
 
   @NotNull JPanel mainPanel = new JPanel();
 
@@ -81,7 +81,7 @@ public class FastpassManagerDialog extends DialogWrapper {
   }
 
   public Optional<Collection<PantsTargetAddress>> selectedItems() {
-    return Optional.ofNullable(manager)
+    return Optional.ofNullable(myChooseTargetsPanel)
       .map(FastpassChooseTargetsPanel::selectedItems);
   }
 
