@@ -62,14 +62,14 @@ public class FastpassBspAmendAction extends AnAction {
     }
   }
 
-  private void startAmendProcedure(Project project, PantsBspData firstProject) {
+  private void startAmendProcedure(Project project, PantsBspData firstProject) throws IOException {
     // [x] TODO = raczej from getLinkedProjects powinno iść
     CompletableFuture<Set<PantsTargetAddress>> oldTargets = FastpassUtils.selectedTargets(firstProject);
 
     FastpassTargetListCache targetsListCache = new FastpassTargetListCache();
 
     // [x] todo co jak importedPantsRootsSize ==0?
-    // todo handle "all in dir" targets selection (::)
+    // [x] todo handle "all in dir" targets selection (::)
     Optional<Set<PantsTargetAddress>> newTargets = FastpassManagerDialog
       .promptForTargetsToImport(project, firstProject, oldTargets,
                                 targetsListCache::getTargetsList
@@ -93,6 +93,8 @@ public class FastpassBspAmendAction extends AnAction {
           catch (Throwable e) {
             logger.error(e);
           }
+        } else {
+          logger.info("Nothing changed");
         }
       })
     );

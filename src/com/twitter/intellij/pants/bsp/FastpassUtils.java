@@ -37,27 +37,28 @@ final public class FastpassUtils {
   }
 
   // todo document
-  // todo switch to completable future
-  public static CompletableFuture<Void> amendAll(@NotNull PantsBspData importData, Collection<String> newTargets) {
+  // [x] todo switch to completable future
+  public static CompletableFuture<Void> amendAll(@NotNull PantsBspData importData, Collection<String> newTargets) throws IOException {
     // [x] todo upewnić się, że amendowanie jest robione do dobrego projektu - może być zaimportowanych wiele BSP
     List<String> amendPart = Arrays.asList(
       "amend", importData.getBspPath().getFileName().toString(),
       "--targets-list", String.join(",", newTargets)
     );
     String[] command = makeFastpassCommand(amendPart);
-    return onExit(importData, command);
+    Process process = fastpassProcess(command, importData.getBspPath().getParent(), Paths.get(importData.getPantsRoot().getPath()));
+    return onExit(process).thenAccept(__ -> {});
   }
 
-  // replacement of JDK9's CompletableFuture::onExit
+  // instead of of JDK9's CompletableFuture::onExit
   @NotNull
-  private static CompletableFuture<Void> onExit(@NotNull PantsBspData importData, String[] command) {
-    return CompletableFuture.runAsync(() -> {
+  private static CompletableFuture<Process> onExit(@NotNull Process process) {
+    return CompletableFuture.supplyAsync(() -> {
       try {
-        Process process = fastpassProcess(command, importData.getBspPath().getParent(), Paths.get(importData.getPantsRoot().getPath()));
         process.waitFor();
         if (process.exitValue() != 0) {
-          throw new RuntimeException(toString(process.getErrorStream()));
+          throw new IOException(toString(process.getErrorStream()));
         }
+        return process;
       } catch (Throwable e) {
         throw new CompletionException(e);
       }
@@ -65,19 +66,19 @@ final public class FastpassUtils {
   }
 
   // todo document
-  public static CompletableFuture<Set<PantsTargetAddress>> selectedTargets(PantsBspData basePath)  {
-    return CompletableFuture.supplyAsync(() -> {
-      try {
+  public static CompletableFuture<Set<PantsTargetAddress>> selectedTargets(PantsBspData basePath) throws IOException {
         String[] fastpassCommand = makeFastpassCommand(Arrays.asList("info", basePath.getBspPath().getFileName().toString()));
         Process process = fastpassProcess(fastpassCommand, basePath.getBspPath().getParent(), Paths.get(basePath.getPantsRoot().getPath()));
-        process.waitFor(); // todo handle cmd line output
-        String stdout = toString(process.getInputStream());
-        String[] list = stdout.equals("") ? new String[]{} : stdout.split("\n");
-        return Stream.of(list).map(PantsTargetAddress::fromString).collect(Collectors.toSet());
-    } catch (Throwable e) {
-      throw new CompletionException(e);
-    }
-    });
+        // [x] todo handle cmd line output
+        return onExit(process).thenApply(finishedProcess -> {
+          try {
+            String stdout = toString(finishedProcess.getInputStream());
+            String[] list = stdout.equals("") ? new String[]{} : stdout.split("\n");
+            return Stream.of(list).map(PantsTargetAddress::fromString).collect(Collectors.toSet());
+          } catch (Throwable e) {
+            throw new CompletionException(e);
+          }
+        });
   }
 
 

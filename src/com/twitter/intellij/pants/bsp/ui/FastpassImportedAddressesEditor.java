@@ -127,13 +127,19 @@ public class FastpassImportedAddressesEditor extends JPanel {
     if(checkboxSelectAllDeep.isSelected()) {
       update.accept(
         Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.AddressKind.ALL_TARGETS_DEEP, Optional.empty())));
+
       checkBoxList.setEnabled(false);
       checkboxSelectAllFlat.setEnabled(false);
+      checkboxSelectAllDeep.setEnabled(true);
     } else if(checkboxSelectAllFlat.isSelected()){
       update.accept(Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.AddressKind.ALL_TARGETS_FLAT, Optional.empty())));
+
       checkBoxList.setEnabled(false);
+      checkboxSelectAllFlat.setEnabled(true);
       checkboxSelectAllDeep.setEnabled(false);
     } else {
+      update.accept(Collections.emptyList());
+
       checkBoxList.setEnabled(true);
       checkboxSelectAllDeep.setEnabled(true);
       checkboxSelectAllFlat.setEnabled(true);
