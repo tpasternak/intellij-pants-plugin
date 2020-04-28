@@ -4,11 +4,8 @@
 package com.twitter.intellij.pants.bsp;
 
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleManager;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.twitter.intellij.pants.bsp.ui.PantsTargetAddress;
 import com.twitter.intellij.pants.util.PantsUtil;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -118,10 +116,17 @@ final public class FastpassUtils {
   // todo document
   public static CompletableFuture<Collection<PantsTargetAddress>> availableTargetsIn(VirtualFile file) {
     return CompletableFuture.supplyAsync(
-      () ->
+      () -> {
         // todo użyj stałej zamiast BUILD
-        PantsUtil.listAllTargets( (file.isDirectory())?  Paths.get(file.getPath(), "BUILD").toString() : file.getPath())
-          .stream().map(PantsTargetAddress::fromString).collect(Collectors.toList())
-      );
+        // todo nie appenduj na głupiego tego "BUILD" - if(is Directoey && contains BUILD, else pusta lista
+
+        if (file.isDirectory() && file.findChild("BUILD") != null) {
+          return PantsUtil.listAllTargets(Paths.get(file.getPath(), "BUILD").toString()).stream().map(PantsTargetAddress::fromString).collect(Collectors.toList());
+        } else if(file.getName().equals("BUILD")) {
+          return PantsUtil.listAllTargets(file.getPath()).stream().map(PantsTargetAddress::fromString).collect(Collectors.toList());
+        } else {
+          return Collections.emptyList();
+        }
+      });
   }
 }

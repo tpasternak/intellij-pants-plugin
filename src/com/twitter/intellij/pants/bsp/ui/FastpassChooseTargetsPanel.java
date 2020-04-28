@@ -4,7 +4,6 @@
 package com.twitter.intellij.pants.bsp.ui;
 
 
-import com.intellij.history.core.Paths;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.ex.FileSystemTreeImpl;
 import com.intellij.openapi.project.Project;
@@ -13,13 +12,14 @@ import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.ui.treeStructure.Tree;
 import com.intellij.util.ui.JBUI;
 import com.twitter.intellij.pants.bsp.PantsBspData;
-import com.twitter.intellij.pants.bsp.ui.FastpassTargetsCheckboxList;
+import com.twitter.intellij.pants.bsp.PantsTargetAddress;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -49,8 +49,10 @@ class FastpassChooseTargetsPanel extends JPanel {
     mainPanel.add(fileSystemTreeScrollPane);
 
     myTargetsListPanel = new FastpassTargetsCheckboxList(
-      item -> mySelectedTargets.add(item),
-      item -> mySelectedTargets.remove(item)
+      (path, items) ->{
+        mySelectedTargets.removeIf(x -> x.getPath().equals(path));
+        mySelectedTargets.addAll(items);
+      }
     );
     mainPanel.add(myTargetsListPanel);
 
@@ -110,7 +112,7 @@ class FastpassChooseTargetsPanel extends JPanel {
     VirtualFile selectedFile,
     VirtualFile root
   ) {
-    return Paths.isParent(root.getPath(), selectedFile.getPath()) && !root.getPath().equals(selectedFile.getPath());
+    return  Paths.get(selectedFile.getPath()).startsWith(Paths.get(root.getPath())) && !root.getPath().equals(selectedFile.getPath()); // todo maybe second arg here is not needed
   }
 
   private void updateCheckboxList(VirtualFile selectedFile) {
@@ -123,7 +125,9 @@ class FastpassChooseTargetsPanel extends JPanel {
                                SwingUtilities.invokeLater(() -> {
                                  if (myFileSystemTree.getSelectedFile().equals(selectedFile)) {
                                    if (error == null) {
-                                     myTargetsListPanel.setItems(targetsInDir, mySelectedTargets);
+                                     myTargetsListPanel.setItems(targetsInDir, mySelectedTargets,
+                                                                 Paths.get(myImportData.getPantsRoot().getPath()).relativize(Paths.get(selectedFile.getPath()))
+                                       );
                                      mainPanel.updateUI();
                                    }
                                    else {

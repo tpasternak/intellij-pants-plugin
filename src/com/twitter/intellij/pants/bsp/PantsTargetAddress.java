@@ -1,13 +1,10 @@
 // Copyright 2020 Pants project contributors (see CONTRIBUTORS.md).
 // Licensed under the Apache License, Version 2.0 (see LICENSE).
 
-package com.twitter.intellij.pants.bsp.ui;
+package com.twitter.intellij.pants.bsp;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -16,7 +13,7 @@ public class PantsTargetAddress {
 
   public enum SelectionKind {
     ALL_TARGETS_FLAT,
-    ALL_TARGETS_RECURSIVE,
+    ALL_TARGETS_DEEP,
     SINGLE_TARGETS
   }
 
@@ -30,11 +27,12 @@ public class PantsTargetAddress {
     myTargets = targets;
   }
 
+  // todo testme
   public String toAddressString() {
     switch (myKind)  {
       case SINGLE_TARGETS: return myPath + ":" + myTargets.get();
       case ALL_TARGETS_FLAT: return myPath + ":";
-      case ALL_TARGETS_RECURSIVE: return myPath + "::";
+      case ALL_TARGETS_DEEP: return myPath + "::";
     }
     throw new RuntimeException("Very bad"); //todo better
   }
@@ -45,7 +43,7 @@ public class PantsTargetAddress {
     if (strings.length == 2) {
       return new PantsTargetAddress(strings[0], SelectionKind.SINGLE_TARGETS, Optional.of(strings[1]));
     } else if (s.endsWith("::")) {
-      return new PantsTargetAddress(strings[0], SelectionKind.ALL_TARGETS_RECURSIVE, Optional.empty());
+      return new PantsTargetAddress(strings[0], SelectionKind.ALL_TARGETS_DEEP, Optional.empty());
     } else if (s.endsWith(":")) {
       return new PantsTargetAddress(strings[0], SelectionKind.ALL_TARGETS_FLAT, Optional.empty());
     } else {

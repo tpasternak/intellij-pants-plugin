@@ -9,6 +9,7 @@ import com.intellij.util.PlatformIcons;
 import com.intellij.util.ui.AsyncProcessIcon;
 import com.intellij.util.ui.JBUI;
 import com.twitter.intellij.pants.bsp.PantsBspData;
+import com.twitter.intellij.pants.bsp.PantsTargetAddress;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

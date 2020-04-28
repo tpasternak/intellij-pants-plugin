@@ -5,7 +5,6 @@ package com.twitter.intellij.pants.bsp;
 
 
 import com.intellij.openapi.vfs.VirtualFile;
-import com.twitter.intellij.pants.bsp.ui.PantsTargetAddress;
 
 import java.util.Collection;
 
