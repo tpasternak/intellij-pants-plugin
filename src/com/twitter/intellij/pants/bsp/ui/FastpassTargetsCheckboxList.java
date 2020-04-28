@@ -30,10 +30,7 @@ import java.util.stream.IntStream;
 
 class FastpassTargetsCheckboxList extends JComponent {
 
-  final private BiConsumer<String, Collection<PantsTargetAddress>> myUpdate;
-
-  public FastpassTargetsCheckboxList(BiConsumer<String, Collection<PantsTargetAddress>> update) {
-    myUpdate = update;
+  public FastpassTargetsCheckboxList() {
     this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     // [x] todo show two special checkboxes at startup
     this.add(mainPanel);
@@ -49,7 +46,8 @@ class FastpassTargetsCheckboxList extends JComponent {
   @NotNull
   JPanel mainPanel = createMainPanel();
 
-  private CheckBoxList<PantsTargetAddress> updateCheckboxList(Collection<PantsTargetAddress> targets, Set<PantsTargetAddress> selected, Path path) {
+  private CheckBoxList<PantsTargetAddress> updateCheckboxList(Collection<PantsTargetAddress> targets, Set<PantsTargetAddress> selected,
+                                                              Path path, BiConsumer<String, Collection<PantsTargetAddress>> update) {
     CheckBoxList<PantsTargetAddress> checkboxPanel =  new CheckBoxList<>();
     CheckBoxList<PantsTargetAddress> cb = checkboxPanel;
     cb.setCheckBoxListListener ((index, value) -> {
@@ -58,7 +56,7 @@ class FastpassTargetsCheckboxList extends JComponent {
         .filter(cb::isItemSelected)
         .mapToObj(cb::getItemAt)
         .collect(Collectors.toList());
-      myUpdate.accept(path.toString(), newSelected); // [x] todo maybe store path in a different place ...
+      update.accept(path.toString(), newSelected); // [x] todo maybe store path in a different place ...
     });
 
 
@@ -75,10 +73,14 @@ class FastpassTargetsCheckboxList extends JComponent {
     mainPanel.add(icon);
   }
 
-  public void  setItems(Collection<PantsTargetAddress> value, Set<PantsTargetAddress> selected, Path path) {
+  public void  setItems(Collection<PantsTargetAddress> value,
+                        Set<PantsTargetAddress> selected,
+                        Path path,
+                        BiConsumer<String, Collection<PantsTargetAddress>> update
+  ) {
     mainPanel.removeAll();
 
-    CheckBoxList<PantsTargetAddress> cbList = updateCheckboxList(value, selected, path);
+    CheckBoxList<PantsTargetAddress> cbList = updateCheckboxList(value, selected, path, update);
 
     JScrollPane cbScroll = ScrollPaneFactory.createScrollPane(cbList);
 
@@ -88,11 +90,11 @@ class FastpassTargetsCheckboxList extends JComponent {
 
     checkboxSelectAllFlat.addItemListener(e -> {
       if (e.getStateChange() == ItemEvent.DESELECTED) {
-        myUpdate.accept(path.toString(), Collections.emptyList());
+        update.accept(path.toString(), Collections.emptyList());
         cbList.setEnabled(true);
         checkboxSelectAllDeep.setEnabled(true);
       } else if(e.getStateChange() == ItemEvent.SELECTED) {
-        myUpdate.accept(path.toString(), Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.SelectionKind.ALL_TARGETS_FLAT, Optional.empty())));
+        update.accept(path.toString(), Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.SelectionKind.ALL_TARGETS_FLAT, Optional.empty())));
         cbList.setEnabled(false);
         checkboxSelectAllDeep.setEnabled(false);
       }
@@ -100,11 +102,11 @@ class FastpassTargetsCheckboxList extends JComponent {
 
     checkboxSelectAllDeep.addItemListener(e -> {
       if (e.getStateChange() == ItemEvent.DESELECTED) {
-        myUpdate.accept(path.toString(), Collections.emptyList());
+        update.accept(path.toString(), Collections.emptyList());
         cbList.setEnabled(true);
         checkboxSelectAllFlat.setEnabled(true);
       } else if(e.getStateChange() == ItemEvent.SELECTED) {
-        myUpdate.accept(path.toString(), Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.SelectionKind.ALL_TARGETS_DEEP, Optional.empty())));
+        update.accept(path.toString(), Collections.singletonList(new PantsTargetAddress(path.toString(), PantsTargetAddress.SelectionKind.ALL_TARGETS_DEEP, Optional.empty())));
         cbList.setEnabled(false);
         checkboxSelectAllFlat.setEnabled(false);
       }

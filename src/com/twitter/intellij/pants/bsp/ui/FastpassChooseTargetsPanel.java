@@ -49,10 +49,6 @@ class FastpassChooseTargetsPanel extends JPanel {
     mainPanel.add(fileSystemTreeScrollPane);
 
     myTargetsListPanel = new FastpassTargetsCheckboxList(
-      (path, items) ->{
-        mySelectedTargets.removeIf(x -> x.getPath().equals(path));
-        mySelectedTargets.addAll(items);
-      }
     );
     mainPanel.add(myTargetsListPanel);
 
@@ -128,7 +124,10 @@ class FastpassChooseTargetsPanel extends JPanel {
                                    if (error == null) {
                                      myTargetsListPanel.setItems(targetsInDir, mySelectedTargets,
                                                                  Paths.get(myImportData.getPantsRoot().getPath()).relativize(Paths.get(selectedFile.getPath()))
-                                       );
+                                       ,   (path, items) ->{
+                                         mySelectedTargets.removeIf(x -> x.getPath().equals(path));
+                                         mySelectedTargets.addAll(items);
+                                       });
                                      mainPanel.updateUI();
                                    }
                                    else {
