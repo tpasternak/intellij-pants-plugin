@@ -42,7 +42,7 @@ final public class FastpassUtils {
     // [x] todo upewnić się, że amendowanie jest robione do dobrego projektu - może być zaimportowanych wiele BSP
     List<String> amendPart = Arrays.asList(
       "amend", importData.getBspPath().getFileName().toString(),
-      "--targets-list", String.join(",", newTargets)
+      "--addresses-list", String.join(",", newTargets)
     );
     String[] command = makeFastpassCommand(amendPart);
     Process process = fastpassProcess(command, importData.getBspPath().getParent(), Paths.get(importData.getPantsRoot().getPath()));
