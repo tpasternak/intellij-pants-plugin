@@ -5,6 +5,8 @@ package com.twitter.intellij.pants.bsp.ui;
 
 import com.intellij.ui.CheckBoxList;
 import com.intellij.ui.ScrollPaneFactory;
+import com.intellij.util.Icons;
+import com.intellij.util.PlatformIcons;
 import com.intellij.util.ui.JBUI;
 import com.twitter.intellij.pants.PantsBundle;
 import com.twitter.intellij.pants.bsp.PantsTargetAddress;
@@ -52,14 +54,10 @@ public class FastpassImportedAddressesEditor extends JPanel {
     checkboxListScroll = ScrollPaneFactory.createScrollPane(checkBoxList);
 
     checkboxSelectAllFlat = new JCheckBox(PantsBundle.message("pants.bsp.all.in.dir.flat"));
-    checkboxSelectAllFlat.addItemListener(e -> updateEnablement(update, path));
-    checkboxSelectAllFlat.setHorizontalAlignment(SwingConstants.LEFT);
 
     checkboxSelectAllDeep = new JCheckBox(PantsBundle.message("pants.bsp.all.in.dir.recursive"));
-    checkboxSelectAllDeep.addItemListener(e -> updateEnablement(update, path));
-    checkboxSelectAllDeep.setHorizontalAlignment(SwingConstants.LEFT);
 
-    statusLabel = new JLabel(" ");
+    statusLabel = new JLabel("");
 
     setupInitialCheckboxesSelection(allSelectedAddresses, path);
 
@@ -68,11 +66,17 @@ public class FastpassImportedAddressesEditor extends JPanel {
       checkboxSelectAllFlat.setEnabled(false);
       checkboxSelectAllDeep.setEnabled(false);
       statusLabel.setText("Selected by parent");
+      statusLabel.setIcon(PlatformIcons.WARNING_INTRODUCTION_ICON);
+    } else {
+      checkboxSelectAllFlat.addItemListener(e -> updateEnablement(update, path));
+      checkboxSelectAllDeep.addItemListener(e -> updateEnablement(update, path));
+      statusLabel.setText(" ");
     }
 
     this.add(checkboxListScroll);
     this.add(checkboxSelectAllFlat);
     this.add(checkboxSelectAllDeep);
+    this.add(statusLabel);
   }
 
   private boolean blockedByParent(
