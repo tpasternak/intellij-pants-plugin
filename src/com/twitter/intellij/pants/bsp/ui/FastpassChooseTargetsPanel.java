@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -121,7 +122,7 @@ class FastpassChooseTargetsPanel extends JPanel {
     }
     targetsList.whenComplete((targetsInDir, error) -> {
       SwingUtilities.invokeLater(() -> {
-        if (myFileSystemTree.getSelectedFile().equals(selectedFile)) {
+        if (Objects.equals(myFileSystemTree.getSelectedFile(), selectedFile)) {
           if (error == null) {
             Path path = Paths.get(myImportData.getPantsRoot().getPath()).relativize(Paths.get(selectedFile.getPath()));
             myTargetsListPanel.setItems(
