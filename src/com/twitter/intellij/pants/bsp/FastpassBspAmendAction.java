@@ -109,10 +109,10 @@ public class FastpassBspAmendAction extends AnAction {
       try {
         // [x] TODO złap błedy // a co jak jest więcej linked projektów?
         FastpassUtils.amendAll(basePath, newTargets.stream().map(x -> x.toAddressString()).collect(Collectors.toList())).get();
+        ExternalProjectUtil.refresh(project, BSP.ProjectSystemId());
       } catch (Throwable e){
         logger.error(e);
       }
     },"Amending", false, project );
-    ExternalProjectUtil.refresh(project, BSP.ProjectSystemId());
   }
 }

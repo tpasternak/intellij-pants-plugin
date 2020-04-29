@@ -5,24 +5,21 @@ package com.twitter.intellij.pants.bsp;
 
 import com.intellij.testFramework.UsefulTestCase;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 
 public class PantsTargetAddressTest extends UsefulTestCase {
   public void testDirectEntry() {
     PantsTargetAddress t = PantsTargetAddress.fromString("project:target");
-    assertEquals(t, new PantsTargetAddress(Paths.get("project"), PantsTargetAddress.AddressKind.SINGLE_TARGETS, Optional.of("target")));
+    assertEquals(t, PantsTargetAddress.oneTargetInDir(Paths.get("project"), "target"));
   }
 
   public void testRecursiveEntry() {
     PantsTargetAddress t = PantsTargetAddress.fromString("project::");
-    assertEquals(t, new PantsTargetAddress(Paths.get("project"), PantsTargetAddress.AddressKind.ALL_TARGETS_DEEP, Optional.empty()));
+    assertEquals(t, PantsTargetAddress.allTargetsInDirDeep(Paths.get("project")));
   }
 
   public void testFlatEntry() {
     PantsTargetAddress t = PantsTargetAddress.fromString("project:");
-
-    assertEquals(t, new PantsTargetAddress(Paths.get("project"), PantsTargetAddress.AddressKind.ALL_TARGETS_FLAT, Optional.empty()));
+    assertEquals(t, PantsTargetAddress.allTargetsInDirFlat(Paths.get("project")));
   }
 }

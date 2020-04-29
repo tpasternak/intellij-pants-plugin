@@ -4,14 +4,18 @@
 package com.twitter.intellij.pants.bsp.ui;
 
 
+import com.intellij.util.PlatformIcons;
 import com.intellij.util.ui.AsyncProcessIcon;
 import com.intellij.util.ui.JBUI;
+import com.twitter.intellij.pants.PantsBundle;
 import com.twitter.intellij.pants.bsp.PantsTargetAddress;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
@@ -55,5 +59,16 @@ class FastpassAddressesViewPanel extends JComponent {
 
   public void clear() {
     mainPanel.removeAll(); // [x] todo no literal "", clear should not all "SetItems"
+  }
+
+  public void fetchTargetsError() {
+    mainPanel.removeAll(); // [x] todo no literal "", clear should not all "SetItems"
+
+    JLabel errorLabel = new JLabel(
+      PantsBundle.message("pants.bsp.error.failed.to.fetch.targets.in.dir"),
+      PlatformIcons.ERROR_INTRODUCTION_ICON,
+      SwingConstants.CENTER
+    );
+    mainPanel.add(errorLabel);
   }
 }

@@ -4,6 +4,7 @@
 package com.twitter.intellij.pants.bsp.ui;
 
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.ex.FileSystemTreeImpl;
 import com.intellij.openapi.project.Project;
@@ -30,6 +31,8 @@ import java.util.function.Function;
 
 
 class FastpassChooseTargetsPanel extends JPanel {
+  Logger logger = Logger.getInstance(FastpassChooseTargetsPanel.class);
+
   // TODO refresh button
   public FastpassChooseTargetsPanel(
     @NotNull Project project,
@@ -135,9 +138,9 @@ class FastpassChooseTargetsPanel extends JPanel {
               }
             );
             mainPanel.updateUI();
-          }
-          else {
-            myTargetsListPanel.clear();
+          } else {
+            logger.error(error);
+            myTargetsListPanel.fetchTargetsError();
             mainPanel.updateUI();
           }
         }

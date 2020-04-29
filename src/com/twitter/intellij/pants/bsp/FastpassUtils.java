@@ -118,12 +118,15 @@ final public class FastpassUtils {
   public static CompletableFuture<Collection<PantsTargetAddress>> availableTargetsIn(VirtualFile file) {
     return CompletableFuture.supplyAsync(
       () -> {
-        // todo użyj stałej zamiast BUILD
-        // todo nie appenduj na głupiego tego "BUILD" - if(is Directoey && contains BUILD, else pusta lista
-
-        if (file.isDirectory() && file.findChild("BUILD") != null) {
-          return PantsUtil.listAllTargets(Paths.get(file.getPath(), "BUILD").toString()).stream().map(PantsTargetAddress::fromString).collect(Collectors.toList());
-        } else if(file.getName().equals("BUILD")) {
+        // [x] todo użyj stałej zamiast BUILD
+        // [x] todo nie appenduj na głupiego tego "BUILD" - if(is Directoey && contains BUILD, else pusta lista
+        final String buildFileName = "BUILD";
+        if (file.isDirectory() && file.findChild(buildFileName) != null) {
+          return PantsUtil.listAllTargets(Paths.get(file.getPath(), buildFileName).toString())
+            .stream()
+            .map(PantsTargetAddress::fromString)
+            .collect(Collectors.toList());
+        } else if(file.getName().equals(buildFileName)) {
           return PantsUtil.listAllTargets(file.getPath()).stream().map(PantsTargetAddress::fromString).collect(Collectors.toList());
         } else {
           return Collections.emptyList();

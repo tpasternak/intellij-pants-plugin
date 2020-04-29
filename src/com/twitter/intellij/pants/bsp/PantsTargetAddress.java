@@ -16,23 +16,35 @@ public class PantsTargetAddress {
   public enum AddressKind {
     ALL_TARGETS_FLAT,
     ALL_TARGETS_DEEP,
-    SINGLE_TARGETS
+    SINGLE_TARGET
   }
 
   @NotNull private Path myPath;
   @NotNull private AddressKind myKind;
   @NotNull private Optional<String> myTargets;
 
-  public PantsTargetAddress(@NotNull Path path, @NotNull AddressKind kind, @NotNull Optional<String> targets) {
+  public static PantsTargetAddress allTargetsInDirFlat(@NotNull Path path) {
+    return new PantsTargetAddress(path, AddressKind.ALL_TARGETS_FLAT, Optional.empty());
+  }
+
+  public static PantsTargetAddress allTargetsInDirDeep(@NotNull Path path) {
+    return new PantsTargetAddress(path, AddressKind.ALL_TARGETS_DEEP, Optional.empty());
+  }
+
+  public static PantsTargetAddress oneTargetInDir(@NotNull Path path, String target) {
+    return new PantsTargetAddress(path, AddressKind.SINGLE_TARGET, Optional.of(target));
+  }
+
+  private PantsTargetAddress(@NotNull Path path, @NotNull AddressKind kind, @NotNull Optional<String> target) {
     myPath = path;
     myKind = kind;
-    myTargets = targets;
+    myTargets = target;
   }
 
   // todo testme
   public String toAddressString() {
     switch (myKind)  {
-      case SINGLE_TARGETS: return myPath + ":" + myTargets.get();
+      case SINGLE_TARGET: return myPath + ":" + myTargets.get();
       case ALL_TARGETS_FLAT: return myPath + ":";
       case ALL_TARGETS_DEEP: return myPath + "::";
     }
@@ -43,7 +55,7 @@ public class PantsTargetAddress {
     String[] strings = s.split(":");
 
     if (strings.length == 2) {
-      return new PantsTargetAddress(Paths.get(strings[0]), AddressKind.SINGLE_TARGETS, Optional.of(strings[1]));
+      return new PantsTargetAddress(Paths.get(strings[0]), AddressKind.SINGLE_TARGET, Optional.of(strings[1]));
     } else if (s.endsWith("::")) {
       return new PantsTargetAddress(Paths.get(strings[0]), AddressKind.ALL_TARGETS_DEEP, Optional.empty());
     } else if (s.endsWith(":")) {

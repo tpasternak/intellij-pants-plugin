@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -53,8 +52,6 @@ public class FastpassImportedAddressesEditor extends JPanel {
 
     statusLabel = new JLabel("");
 
-    setupInitialCheckboxesSelection(allSelectedAddresses, path);
-
     if(blockedByParent(allSelectedAddresses, path)) {
       checkBoxList.setEnabled(false);
       checkboxSelectAllFlat.setEnabled(false);
@@ -62,10 +59,12 @@ public class FastpassImportedAddressesEditor extends JPanel {
       statusLabel.setText(PantsBundle.message("pants.bsp.already.selected.by.parent"));
       statusLabel.setIcon(PlatformIcons.WARNING_INTRODUCTION_ICON);
     } else {
-      checkboxSelectAllFlat.addItemListener(e -> updateEnablement(update, path));
-      checkboxSelectAllDeep.addItemListener(e -> updateEnablement(update, path));
+      checkboxSelectAllFlat.addItemListener(e -> handleSelectionChange(update, path));
+      checkboxSelectAllDeep.addItemListener(e -> handleSelectionChange(update, path));
       statusLabel.setText(" ");
     }
+
+    setupInitialCheckboxesSelection(allSelectedAddresses, path);
 
     this.add(checkboxListScroll);
     this.add(checkboxSelectAllFlat);
@@ -78,8 +77,8 @@ public class FastpassImportedAddressesEditor extends JPanel {
     @NotNull Path path
   ) {
     return allSelectedAddresses.stream().anyMatch(x -> path.startsWith(x.getPath())
-                                                   && !x.getPath().equals(path)
-                                                   && x.getKind() == PantsTargetAddress.AddressKind.ALL_TARGETS_DEEP
+                                                       && !x.getPath().equals(path)
+                                                       && x.getKind() == PantsTargetAddress.AddressKind.ALL_TARGETS_DEEP
     );
   }
 
@@ -113,7 +112,7 @@ public class FastpassImportedAddressesEditor extends JPanel {
   ) {
     return selected.stream()
       .filter(x -> x.getPath().equals(path))
-      .allMatch(x -> x.getKind() == PantsTargetAddress.AddressKind.SINGLE_TARGETS);
+      .allMatch(x -> x.getKind() == PantsTargetAddress.AddressKind.SINGLE_TARGET);
   }
 
   private boolean deepAllInDirSelected(
@@ -149,18 +148,16 @@ public class FastpassImportedAddressesEditor extends JPanel {
     return checkboxPanel;
   }
 
-  // todo handle parent deep selected here
-  void updateEnablement(Consumer<Collection<PantsTargetAddress>> update, Path path) {
+  // [x] todo handle parent deep selected here
+  void handleSelectionChange(Consumer<Collection<PantsTargetAddress>> update, Path path) {
     if(checkboxSelectAllDeep.isSelected()) {
-      update.accept(
-        // TODO zrób jakieś konstruktory do tego
-        Collections.singletonList(new PantsTargetAddress(path, PantsTargetAddress.AddressKind.ALL_TARGETS_DEEP, Optional.empty())));
+      update.accept(Collections.singletonList(PantsTargetAddress.allTargetsInDirDeep(path))); // [x] TODO zrób jakieś konstruktory do tego
 
       checkBoxList.setEnabled(false);
       checkboxSelectAllFlat.setEnabled(false);
       checkboxSelectAllDeep.setEnabled(true);
     } else if(checkboxSelectAllFlat.isSelected()){
-      update.accept(Collections.singletonList(new PantsTargetAddress(path, PantsTargetAddress.AddressKind.ALL_TARGETS_FLAT, Optional.empty())));
+      update.accept(Collections.singletonList(PantsTargetAddress.allTargetsInDirFlat(path)));
 
       checkBoxList.setEnabled(false);
       checkboxSelectAllFlat.setEnabled(true);
