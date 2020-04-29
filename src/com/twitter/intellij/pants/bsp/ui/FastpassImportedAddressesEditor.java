@@ -5,9 +5,7 @@ package com.twitter.intellij.pants.bsp.ui;
 
 import com.intellij.ui.CheckBoxList;
 import com.intellij.ui.ScrollPaneFactory;
-import com.intellij.util.Icons;
 import com.intellij.util.PlatformIcons;
-import com.intellij.util.ui.JBUI;
 import com.twitter.intellij.pants.PantsBundle;
 import com.twitter.intellij.pants.bsp.PantsTargetAddress;
 import org.jetbrains.annotations.NotNull;
@@ -17,10 +15,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.SwingConstants;
-import java.awt.CardLayout;
 import java.awt.Component;
-import java.awt.FlowLayout;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,7 +33,6 @@ public class FastpassImportedAddressesEditor extends JPanel {
   @NotNull final JCheckBox checkboxSelectAllFlat;
   @NotNull final JCheckBox checkboxSelectAllDeep;
   @NotNull final JLabel statusLabel;
-  @NotNull boolean blockedByParent;
 
   public FastpassImportedAddressesEditor(
     @NotNull Collection<PantsTargetAddress> availableTargetsInPath,
@@ -65,7 +59,7 @@ public class FastpassImportedAddressesEditor extends JPanel {
       checkBoxList.setEnabled(false);
       checkboxSelectAllFlat.setEnabled(false);
       checkboxSelectAllDeep.setEnabled(false);
-      statusLabel.setText("Selected by parent");
+      statusLabel.setText(PantsBundle.message("pants.bsp.already.selected.by.parent"));
       statusLabel.setIcon(PlatformIcons.WARNING_INTRODUCTION_ICON);
     } else {
       checkboxSelectAllFlat.addItemListener(e -> updateEnablement(update, path));
