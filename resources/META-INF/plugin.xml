@@ -175,6 +175,7 @@
     <externalSystemNotificationExtension implementation="com.twitter.intellij.pants.notification.PantsNotificationCustomizer"/>
     <externalProjectDataService implementation="com.twitter.intellij.pants.service.project.metadata.PantsMetadataService"/>
     <projectService serviceImplementation="com.twitter.intellij.pants.components.PantsProjectCache"/>
+    <editorNotificationProvider implementation="com.twitter.intellij.pants.bsp.AmendEditorNotificationsProvider"/>
   </extensions>
   <projectListeners>
     <listener class="com.twitter.intellij.pants.execution.SetJarManifestCommandLineShortener"
