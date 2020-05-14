@@ -7,6 +7,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.util.io.StreamUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorNotifications;
 import com.intellij.ui.EditorNotificationPanel;
@@ -62,22 +63,25 @@ class AmendEditorNotificationsProvider extends EditorNotifications.Provider<Edit
 
   @NotNull
   public static Optional<String> jarPathToTarget(@NotNull Path p) {
+
     List<Path> allParentNames =
       Stream.iterate(p, x -> x != null ? x.getParent() : null)
         .limit(100)
         .filter(Objects::nonNull)
-        .map(x -> x.getFileName())
+        .map(Path::getFileName)
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
     Optional<Path> jarName = allParentNames.stream().filter(x -> x.toString().endsWith(".jar!")).findFirst();
-    return jarName.map(x -> {
-      String cleanString = x.toString().contains("-sources")
-                           ? x.toString().substring(0, x.toString().length() - 13)
-                           : x.toString().substring(0, x.toString().length() - 5);
-      String[] col = cleanString.split("\\.");
-      return Arrays.stream(col).limit(col.length - 1).collect(Collectors.joining("/"))
-             + ":"
-             + Arrays.stream(col).skip(col.length - 1).findFirst().get(); // todo zrób to parsowanie jak człowiek
+    return jarName.flatMap(x -> {
+      String sourceFileSuffix = "-sources.jar!";
+      String classFileSuffix = ".jar!";
+      String stem = x.toString().contains("-sources")
+                           ? x.toString().substring(0, x.toString().length() - sourceFileSuffix.length())
+                           : x.toString().substring(0, x.toString().length() - classFileSuffix.length());
+      String[] jarFilePartitioned = stem.split("\\.");
+      Stream<String> allButLast = Arrays.stream(jarFilePartitioned).limit(jarFilePartitioned.length - 1);
+      Optional<String> lastElementOption = Arrays.stream(jarFilePartitioned).skip(jarFilePartitioned.length - 1).findFirst();
+      return lastElementOption.map(last -> allButLast.collect(Collectors.joining("/")) + ":" + last);
     });
   }
 
