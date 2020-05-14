@@ -38,8 +38,11 @@ class AmendEditorNotificationsProvider extends EditorNotifications.Provider<Edit
       return null;
     }
     Path path = Paths.get(file.getPath());
+    if(!path.toString().contains("bloop-jars")) {
+      return null;
+    }
     Optional<PantsTargetAddress> targetName = decodeJarPath(path).flatMap(PantsTargetAddress::tryParse);
-    if (targetName.isPresent() && !targetName.get().getPath().toString().isEmpty()) {
+    if (targetName.isPresent()) {
       EditorNotificationPanel panel = new EditorNotificationPanel();
       panel.createActionLabel(PantsBundle.message("pants.bsp.editor.convert.button"), () -> {
         try {
