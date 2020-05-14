@@ -25,18 +25,24 @@ public class TargetsPreview extends JPanel {
   }
 
   public void setError() {
+    preview.setFocusable(false);
     preview.setText(PantsBundle.message("pants.bsp.invalid.targets.list"));
+    preview.setFocusable(true);
   }
 
   public void setLoading() {
+    preview.setFocusable(false);
     preview.setText(PantsBundle.message("pants.bsp.loading"));
+    preview.setFocusable(true);
   }
 
   public void updatePreview (Set<PantsTargetAddress> addresses) {
+    preview.setFocusable(false);
     String newText = addresses.stream()
         .map(PantsTargetAddress::toAddressString)
         .sorted()
         .collect(Collectors.joining("\n")) + "\n";
     preview.setText(newText);
+    preview.setFocusable(true);
   }
 }

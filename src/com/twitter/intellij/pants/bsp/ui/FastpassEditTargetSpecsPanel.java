@@ -21,7 +21,6 @@ import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.text.CollationElementIterator;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -39,13 +38,14 @@ class FastpassEditTargetSpecsPanel extends JPanel {
   private final JLabel previewLabel;
   private Set<String> targetStrings;
 
-
   public FastpassEditTargetSpecsPanel(
-    @NotNull Collection<String> importedTargets,
+    @NotNull Collection<String> alreadyImportedTargets,
     @NotNull PantsTargetsRepository targetsListFetcher,
-    @NotNull Collection<String> newTargets
+    @NotNull Collection<String> targetsToAmend
   ) {
+    myAlreadyImportedTargets = alreadyImportedTargets;
     myPantsTargetsRepository = targetsListFetcher;
+    myTargetsToAmend = targetsToAmend;
     mainPanel = new JPanel();
     statusLabel = new FastpassStatus();
     preview = new TargetsPreview();
@@ -54,7 +54,7 @@ class FastpassEditTargetSpecsPanel extends JPanel {
     previewLabel.setAlignmentX(LEFT_ALIGNMENT);
 
     editor = new JTextArea();
-    editor.setText(importedTargets.stream().sorted().collect(Collectors.joining("\n")) + "\n" + newTargets.stream().sorted().collect(Collectors.joining("\n")));
+    editor.setText(alreadyImportedTargets.stream().sorted().collect(Collectors.joining("\n")) + "\n" + targetsToAmend.stream().sorted().collect(Collectors.joining("\n")));
     onRulesListEdition(selectedTargetStrings());
 
     JLabel editorLabel = new JLabel(PantsBundle.message("pants.bsp.editor.title"));
@@ -108,7 +108,6 @@ class FastpassEditTargetSpecsPanel extends JPanel {
     mainPanel.add(northPanel);
     mainPanel.add(southPanel);
 
-
     this.add(mainPanel);
   }
 
@@ -136,7 +135,9 @@ class FastpassEditTargetSpecsPanel extends JPanel {
   }
 
 
+  private Collection<String> myAlreadyImportedTargets;
   final PantsTargetsRepository myPantsTargetsRepository;
+  private Collection<String> myTargetsToAmend;
 
   private void onRulesListEdition(Set<String> targetStrings) {
     this.targetStrings = targetStrings;
