@@ -11,6 +11,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorNotifications;
 import com.intellij.ui.EditorNotificationPanel;
 import com.twitter.intellij.pants.PantsBundle;
+import com.twitter.intellij.pants.bsp.ui.FastpassManagerDialog;
 import com.twitter.intellij.pants.util.ExternalProjectUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,10 +20,13 @@ import org.jetbrains.bsp.BSP;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -45,31 +49,29 @@ class AmendEditorNotificationsProvider extends EditorNotifications.Provider<Edit
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
     Optional<Path> jarName = allParentNames.stream().filter(x -> x.toString().endsWith(".jar!")).findFirst();
-
     Optional<String> targetName = jarName.map(x -> {
       String cleanString = x.toString().contains("-sources")
                            ? x.toString().substring(0, x.toString().length() - 13)
                            : x.toString().substring(0, x.toString().length() - 5);
-      String[] col = cleanString.toString().split("\\.");
-      return Arrays.stream(col).limit(col.length -1).collect(Collectors.joining("/")) + ":" + Arrays.stream(col).skip(col.length -1).findFirst().get();
+      String[] col = cleanString.split("\\.");
+      return Arrays.stream(col).limit(col.length -1).collect(Collectors.joining("/")) + ":" + Arrays.stream(col).skip(col.length -1).findFirst().get(); // todo zrób to parsowanie jak człowiek
     });
 
     if (targetName.isPresent()) {
       EditorNotificationPanel panel = new EditorNotificationPanel();
       panel.createActionLabel(PantsBundle.message("pants.bsp.editor.convert.button"), () -> {
-        PantsBspData importData = PantsBspData.importsFor(project).stream().findFirst().get();
-        FastpassUtils.selectedTargets(importData).thenAccept(
-          targets -> {
-            try {
-              HashSet<String> newTargets = new HashSet<>(targets);
-              newTargets.add(targetName.get());
-              FastpassUtils.amendAll(importData, newTargets, project).get();
-              ExternalProjectUtil.refresh(project, BSP.ProjectSystemId());
-            } catch (Throwable e) {
-              logger.error(e);
-            }
+        try {
+          PantsBspData importData = PantsBspData.importsFor(project).stream().findFirst().get();
+          CompletableFuture<Set<String>> oldTargets = FastpassUtils.selectedTargets(importData);
+          Optional<Set<String>> newTargets = FastpassManagerDialog.getNewTargets(project, importData, oldTargets,
+                                                                                 Collections.singletonList(targetName.get())); //todo get!!!
+          if(newTargets.isPresent()) {
+            FastpassUtils.amendAll(importData, newTargets.get(), project).get();
+            ExternalProjectUtil.refresh(project, BSP.ProjectSystemId());
           }
-        );
+        }catch (Throwable e) {
+          logger.error(e);
+        }
       });
       return panel.text(PantsBundle.message(
         "pants.bsp.file.editor.amend.notification.title",

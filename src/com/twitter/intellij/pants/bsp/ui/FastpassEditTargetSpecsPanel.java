@@ -21,6 +21,7 @@ import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.text.CollationElementIterator;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -41,7 +42,8 @@ class FastpassEditTargetSpecsPanel extends JPanel {
 
   public FastpassEditTargetSpecsPanel(
     @NotNull Collection<String> importedTargets,
-    @NotNull PantsTargetsRepository targetsListFetcher
+    @NotNull PantsTargetsRepository targetsListFetcher,
+    @NotNull Collection<String> newTargets
   ) {
     myPantsTargetsRepository = targetsListFetcher;
     mainPanel = new JPanel();
@@ -52,7 +54,7 @@ class FastpassEditTargetSpecsPanel extends JPanel {
     previewLabel.setAlignmentX(LEFT_ALIGNMENT);
 
     editor = new JTextArea();
-    editor.setText(importedTargets.stream().sorted().collect(Collectors.joining("\n")));
+    editor.setText(importedTargets.stream().sorted().collect(Collectors.joining("\n")) + "\n" + newTargets.stream().sorted().collect(Collectors.joining("\n")));
     onRulesListEdition(selectedTargetStrings());
 
     JLabel editorLabel = new JLabel(PantsBundle.message("pants.bsp.editor.title"));

@@ -20,6 +20,7 @@ import javax.swing.SwingUtilities;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -72,14 +73,11 @@ public class FastpassBspAmendAction extends AnAction {
   private void startAmendProcedure(Project project, PantsBspData firstProject) {
     CompletableFuture<Set<String>> oldTargets = FastpassUtils.selectedTargets(firstProject);
 
-    FastpassTargetListCache targetsListCache = new FastpassTargetListCache(Paths.get(firstProject.getPantsRoot().getPath()));
-    PantsTargetsRepository getPreview = targets -> FastpassUtils.validateAndGetPreview(firstProject.getPantsRoot(), targets,
-                                                                                       targetsListCache::getTargetsList
-    );
-    Optional<Set<String>> newTargets = FastpassManagerDialog
-      .promptForTargetsToImport(project, oldTargets, getPreview);
+    Optional<Set<String>> newTargets = FastpassManagerDialog.getNewTargets(project, firstProject, oldTargets, Collections.emptySet());
     amendAndRefreshIfNeeded(project, firstProject, oldTargets, newTargets);
   }
+
+
 
   private void amendAndRefreshIfNeeded(
     @NotNull Project project,
