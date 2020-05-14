@@ -40,29 +40,13 @@ class AmendEditorNotificationsProvider extends EditorNotifications.Provider<Edit
     @NotNull VirtualFile file, @NotNull FileEditor fileEditor, @NotNull Project project
   ) {
     Path p = Paths.get(file.getPath());
-
-    List<Path> allParentNames =
-      Stream.iterate(p, x -> x != null ? x.getParent() : null)
-        .limit(100)
-        .filter(Objects::nonNull)
-        .map(x -> x.getFileName())
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList());
-    Optional<Path> jarName = allParentNames.stream().filter(x -> x.toString().endsWith(".jar!")).findFirst();
-    Optional<String> targetName = jarName.map(x -> {
-      String cleanString = x.toString().contains("-sources")
-                           ? x.toString().substring(0, x.toString().length() - 13)
-                           : x.toString().substring(0, x.toString().length() - 5);
-      String[] col = cleanString.split("\\.");
-      return Arrays.stream(col).limit(col.length -1).collect(Collectors.joining("/")) + ":" + Arrays.stream(col).skip(col.length -1).findFirst().get(); // todo zrób to parsowanie jak człowiek
-    });
-
+    Optional<String> targetName = jarPathToTarget(p);
     if (targetName.isPresent()) {
       EditorNotificationPanel panel = new EditorNotificationPanel();
       panel.createActionLabel(PantsBundle.message("pants.bsp.editor.convert.button"), () -> {
         try {
           FastpassBspAmendAction.bspAmendWithDialog(project, Collections.singleton(targetName.get()));
-        }catch (Throwable e) {
+        } catch (Throwable e) {
           logger.error(e);
         }
       });
@@ -74,6 +58,27 @@ class AmendEditorNotificationsProvider extends EditorNotifications.Provider<Edit
     else {
       return null;
     }
+  }
+
+  @NotNull
+  public static Optional<String> jarPathToTarget(@NotNull Path p) {
+    List<Path> allParentNames =
+      Stream.iterate(p, x -> x != null ? x.getParent() : null)
+        .limit(100)
+        .filter(Objects::nonNull)
+        .map(x -> x.getFileName())
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+    Optional<Path> jarName = allParentNames.stream().filter(x -> x.toString().endsWith(".jar!")).findFirst();
+    return jarName.map(x -> {
+      String cleanString = x.toString().contains("-sources")
+                           ? x.toString().substring(0, x.toString().length() - 13)
+                           : x.toString().substring(0, x.toString().length() - 5);
+      String[] col = cleanString.split("\\.");
+      return Arrays.stream(col).limit(col.length - 1).collect(Collectors.joining("/"))
+             + ":"
+             + Arrays.stream(col).skip(col.length - 1).findFirst().get(); // todo zrób to parsowanie jak człowiek
+    });
   }
 
   @NotNull
