@@ -10,22 +10,22 @@ import java.util.Optional;
 
 public class ExtractPantsTargetsFromJarPath extends UsefulTestCase {
   public void testFlatDirectory () {
-    Optional<String> actual = AmendEditorNotificationsProvider.jarPathToTarget(Paths.get("/tmp/directory.targetname.jar!/myFile"));
+    Optional<String> actual = AmendEditorNotificationsProvider.decodeJarPath(Paths.get("/tmp/directory.targetname.jar!/myFile"));
     assertEquals("directory:targetname", actual.get());
   }
 
   public void testDeepDirectory () {
-    Optional<String> actual = AmendEditorNotificationsProvider.jarPathToTarget(Paths.get("/tmp/dirparent.dirchild.targetname.jar!/myFile"));
+    Optional<String> actual = AmendEditorNotificationsProvider.decodeJarPath(Paths.get("/tmp/dirparent.dirchild.targetname.jar!/myFile"));
     assertEquals("dirparent/dirchild:targetname", actual.get());
   }
 
   public void testFlatDirectorySourcesJar () {
-    Optional<String> actual = AmendEditorNotificationsProvider.jarPathToTarget(Paths.get("/tmp/directory.targetname-sources.jar!/myFile"));
+    Optional<String> actual = AmendEditorNotificationsProvider.decodeJarPath(Paths.get("/tmp/directory.targetname-sources.jar!/myFile"));
     assertEquals("directory:targetname", actual.get());
   }
 
   public void testDeepDirectorySourcesJar () {
-    Optional<String> actual = AmendEditorNotificationsProvider.jarPathToTarget(Paths.get("/tmp/dirparent.dirchild.targetname-sources.jar!/myFile"));
+    Optional<String> actual = AmendEditorNotificationsProvider.decodeJarPath(Paths.get("/tmp/dirparent.dirchild.targetname-sources.jar!/myFile"));
     assertEquals("dirparent/dirchild:targetname", actual.get());
   }
 }
