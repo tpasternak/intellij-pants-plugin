@@ -61,14 +61,7 @@ class AmendEditorNotificationsProvider extends EditorNotifications.Provider<Edit
       EditorNotificationPanel panel = new EditorNotificationPanel();
       panel.createActionLabel(PantsBundle.message("pants.bsp.editor.convert.button"), () -> {
         try {
-          PantsBspData importData = PantsBspData.importsFor(project).stream().findFirst().get();
-          CompletableFuture<Set<String>> oldTargets = FastpassUtils.selectedTargets(importData);
-          Optional<Set<String>> newTargets = FastpassManagerDialog.getNewTargets(project, importData, oldTargets,
-                                                                                 Collections.singletonList(targetName.get())); //todo get!!!
-          if(newTargets.isPresent()) {
-            FastpassUtils.amendAll(importData, newTargets.get(), project).get();
-            ExternalProjectUtil.refresh(project, BSP.ProjectSystemId());
-          }
+          FastpassBspAmendAction.bspAmendWithDialog(project, Collections.singleton(targetName.get()));
         }catch (Throwable e) {
           logger.error(e);
         }
