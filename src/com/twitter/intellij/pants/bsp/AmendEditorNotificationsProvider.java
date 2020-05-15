@@ -38,9 +38,6 @@ class AmendEditorNotificationsProvider extends EditorNotifications.Provider<Edit
       return null;
     }
     Path path = Paths.get(file.getPath());
-    if(!path.toString().contains("bloop-jars")) {
-      return null;
-    }
     Optional<PantsTargetAddress> targetName = decodeJarPath(path).flatMap(PantsTargetAddress::tryParse);
     if (targetName.isPresent()) {
       EditorNotificationPanel panel = new EditorNotificationPanel();
@@ -63,6 +60,9 @@ class AmendEditorNotificationsProvider extends EditorNotifications.Provider<Edit
 
   @NotNull
   public static Optional<String> decodeJarPath(@NotNull Path p) {
+    if(!p.toString().contains("bloop-jars")) {
+      return Optional.empty();
+    }
     List<Path> allParentNames =
       Stream.iterate(p, x -> x != null ? x.getParent() : null)
         .limit(100)
